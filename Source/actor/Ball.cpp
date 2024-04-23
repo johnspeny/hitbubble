@@ -40,7 +40,7 @@ bool Ball::showOnGameScene(const Vec2& position)
     // create the sprite
     m_bodySprite = Sprite::create("circle.png");
 
-    m_bodySprite->setColor(Color3B::GREEN);
+    m_bodySprite->setColor(Color3B::RED);
 
     // set initial sprite position
     m_bodySprite->setPosition(position);

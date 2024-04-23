@@ -192,6 +192,21 @@ void GameScene::update(float dt)
                 }
                 // update items
                 updateItems(dt);
+
+                // if number of items to be placed on board equals number of items set for removal
+                if (auto totalItems{itemScheduledForRemoval.size()}; totalItems == 4 &&
+                                                                     !onItemsAllDetached)
+                {
+                    onItemsAllDetached = true;
+                    this->scheduleOnce(
+                        [this](float dt) {
+                        // setForRemoval = false;
+                        this->_isWinGame = true;
+                        CLOG("removed");
+                        },
+                        1.0f, "ready4removal");
+                    totalItems = -1;
+                }
             }
 
             // Check for game over conditions
@@ -490,6 +505,7 @@ void GameScene::resetGame()
     isCoinRemoved        = false;
     _isShakeBush         = false;
     totalCoin            = 0;
+    onItemsAllDetached   = false;
 
     // reset game state
     _gameState = GameState::init;
