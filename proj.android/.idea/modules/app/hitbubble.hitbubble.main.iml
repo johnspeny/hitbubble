@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module version="4">
+  <component name="AdditionalModuleElements">
+    <content url="file://C:/Dev/axmol">
+      <sourceFolder url="file://C:/Dev/axmol" type="native-header-root" />
+    </content>
+    <content url="file://C:/Dev/axmol/3rdparty">
+      <sourceFolder url="file://C:/Dev/axmol/3rdparty" type="native-Source-root" />
+    </content>
+    <content url="file://C:/Dev/axmol/core/2d">
+      <sourceFolder url="file://C:/Dev/axmol/core/2d" type="native-Source-root" />
+    </content>
+    <content url="file://C:/Dev/axmol/core/3d">
+      <sourceFolder url="file://C:/Dev/axmol/core/3d" type="native-Source-root" />
+    </content>
+    <content url="file://C:/Dev/axmol/core/audio">
+      <sourceFolder url="file://C:/Dev/axmol/core/audio" type="native-Source-root" />
+    </content>
+    <content url="file://C:/Dev/axmol/core/base">
+      <sourceFolder url="file://C:/Dev/axmol/core/base" type="native-Source-root" />
+    </content>
+    <content url="file://C:/Dev/axmol/core/math">
+      <sourceFolder url="file://C:/Dev/axmol/core/math" type="native-Source-root" />
+    </content>
+    <content url="file://C:/Dev/axmol/core/media">
+      <sourceFolder url="file://C:/Dev/axmol/core/media" type="native-Source-root" />
+    </content>
+    <content url="file://C:/Dev/axmol/core/navmesh">
+      <sourceFolder url="file://C:/Dev/axmol/core/navmesh" type="native-Source-root" />
+    </content>
+    <content url="file://C:/Dev/axmol/core/network">
+      <sourceFolder url="file://C:/Dev/axmol/core/network" type="native-Source-root" />
+    </content>
+    <content url="file://C:/Dev/axmol/core/physics">
+      <sourceFolder url="file://C:/Dev/axmol/core/physics" type="native-Source-root" />
+    </content>
+    <content url="file://C:/Dev/axmol/core/physics3d">
+      <sourceFolder url="file://C:/Dev/axmol/core/physics3d" type="native-Source-root" />
+    </content>
+    <content url="file://C:/Dev/axmol/core/platform">
+      <sourceFolder url="file://C:/Dev/axmol/core/platform" type="native-Source-root" />
+    </content>
+    <content url="file://C:/Dev/axmol/core/renderer">
+      <sourceFolder url="file://C:/Dev/axmol/core/renderer" type="native-Source-root" />
+    </content>
+    <content url="file://C:/Dev/axmol/core/ui">
+      <sourceFolder url="file://C:/Dev/axmol/core/ui" type="native-Source-root" />
+    </content>
+    <content url="file://C:/Dev/axmol/extensions">
+      <sourceFolder url="file://C:/Dev/axmol/extensions" type="native-Source-root" />
+    </content>
+    <content url="file://$MODULE_DIR$/../../../../Source">
+      <sourceFolder url="file://$MODULE_DIR$/../../../../Source" type="native-Source-root" />
+    </content>
+    <content url="file://$MODULE_DIR$/../../../app/jni">
+      <sourceFolder url="file://$MODULE_DIR$/../../../app/jni" type="native-Source-root" />
+    </content>
+  </component>
+</module>
