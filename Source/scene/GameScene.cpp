@@ -194,8 +194,7 @@ void GameScene::update(float dt)
                 updateItems(dt);
 
                 // if number of items to be placed on board equals number of items set for removal
-                if (auto totalItems{itemScheduledForRemoval.size()}; totalItems == 4 &&
-                                                                     !onItemsAllDetached)
+                if (auto totalItems{itemScheduledForRemoval.size()}; totalItems == 4 && !onItemsAllDetached)
                 {
                     onItemsAllDetached = true;
                     this->scheduleOnce(
@@ -205,7 +204,6 @@ void GameScene::update(float dt)
                         CLOG("removed");
                         },
                         1.0f, "ready4removal");
-                    totalItems = -1;
                 }
             }
 

@@ -14,14 +14,16 @@ private:
 
     ax::Label* lifeLabel;
     int m_lifeVal;
+    bool m_isHitWall{false};
 
 public:
+    bool _isHitWallHandled{false};
     explicit Fruit(int lifeVal);
     virtual ~Fruit() = default;
 
     bool showOnGameScene(const Vec2& position) override;
 
-    // virtual void update(float dt) override;
+    void update(float dt) override;
 
     const std::string& selectRandomSpriteName(const std::vector<std::string>& spriteNames) const override;
 
@@ -34,4 +36,11 @@ public:
     }
 
     virtual void startContact() override;
+
+    inline float getRadius() const { return m_radius; };
+
+    // hit wall
+    void setIsHitWall(bool ishitWall);
+
+    inline bool getIsHitWall() const { return m_isHitWall; }
 };

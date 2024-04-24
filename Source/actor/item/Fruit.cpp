@@ -62,6 +62,63 @@ bool Fruit::showOnGameScene(const Vec2& position)
     return true;
 }
 
+void Fruit::update(float dt)
+{
+    Item::update(dt);
+    if (m_isHitWall && !_isHitWallHandled)
+    {
+        m_isHitWall       = false;
+        _isHitWallHandled = true;
+
+        float newRadius = 15.0f;
+
+        b2Fixture* fixtureToDelete = m_body->GetFixtureList();
+        m_body->DestroyFixture(fixtureToDelete);
+        // Update Box2D body's fixture size
+        b2CircleShape newShape;
+        newShape.m_radius = newRadius / GameUtils::PPM::kPpm;
+
+        // Create a new fixture with the updated shape
+        b2FixtureDef fixtureDef;
+        fixtureDef.shape               = &newShape;
+        fixtureDef.density             = 0.1f;
+        fixtureDef.friction            = 0.0f;
+        fixtureDef.restitution         = 0.2f;
+        fixtureDef.filter.categoryBits = kItem;
+        fixtureDef.filter.maskBits     = kWall | kWallRight | kWallLeft;
+        fixtureDef.userData.pointer    = reinterpret_cast<uintptr_t>(this);
+
+        m_body->CreateFixture(&fixtureDef);
+
+        // Update sprite's size
+        float scale = newRadius / (m_bodySprite->getContentSize().width / 2.0f);
+        m_bodySprite->setScale(scale);
+
+        //// Destroy the existing fixture
+        // b2Fixture* fixtureToDelete = itemFixture->GetBody()->GetFixtureList();
+        // itemFixture->GetBody()->DestroyFixture(fixtureToDelete);
+
+        //// Update Box2D body's fixture size
+        // b2CircleShape newShape;
+        // newShape.m_radius = item->getRadius() / GameUtils::PPM::kPpm;
+
+        //// Create a new fixture with the updated shape
+        // b2FixtureDef fixtureDef;
+        // fixtureDef.shape               = &newShape;
+        // fixtureDef.density             = 0.1f;
+        // fixtureDef.friction            = 0.0f;
+        // fixtureDef.restitution         = 0.2f;
+        // fixtureDef.filter.categoryBits = kItem;
+        // fixtureDef.filter.maskBits     = kWall | kWallRight | kWallLeft;
+
+        // itemFixture->GetBody()->CreateFixture(&fixtureDef);
+
+        //// Update sprite's size
+        // float scale = item->getRadius() / (item->getBodySprite()->getContentSize().width / 2.0f);
+        // item->getBodySprite()->setScale(scale);
+    }
+}
+
 const std::string& Fruit::selectRandomSpriteName(const std::vector<std::string>& spriteNames) const
 {
     // Random number generator
@@ -82,6 +139,11 @@ void Fruit::startContact()
     // update the label to reduce the life value
     m_lifeVal--;
     lifeLabel->setString(std::to_string(m_lifeVal));
+}
+
+void Fruit::setIsHitWall(bool ishitWall)
+{
+    m_isHitWall = ishitWall;
 }
 
 void Fruit::defineBody(float x, float y)
