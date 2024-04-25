@@ -20,9 +20,8 @@ constexpr auto kBallMaskBits     = kHead | kHair | kWall | kWallRight | kWallLef
 constexpr auto m_radius          = kBallRadius;
 }  // namespace
 
-//  // 8
+//  // 8 // m_radius{ 20.0f }
 Ball::Ball() : desiredBounceHeight{6.0f}, m_isHitHair{}, m_isHitWall{}
-// m_radius{ 20.0f }
 {
     GameUtils::PPM::initVars();
     m_scene = SceneManager::getInstance().getCurrentScene<GameScene>();
@@ -78,16 +77,11 @@ void Ball::update(float dt)
     if (m_scene->_isStartGame)
         desiredBounceHeight = 10.0f;
 
-    b2Vec2 gravityForce = b2Vec2(0.0f, -m_body->GetMass() * 10.0f);  // Set the desired force
+    auto gravityForce = b2Vec2(0.0f, -m_body->GetMass() * 10.0f);  // Set the desired force
     m_body->ApplyForceToCenter(gravityForce, false);
 
     if (getIsHitHair() && !m_scene->_isReviveGame)
     {
-        if (m_scene->_isStartGame && (!m_scene->_isWinGame || !m_scene->_isGameOver))
-        {
-            m_scene->m_hud->updateCurrentMissionValues();
-        }
-
         // play bounce sound
         if (m_scene->_isStartGame)
         {

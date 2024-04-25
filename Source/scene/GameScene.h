@@ -52,7 +52,7 @@ public:
     bool _isShakeBush{false};
 
     GameScene();
-    ~GameScene();
+    ~GameScene() override;
     static GameScene* create();
     bool init() override;
     void update(float dt) override;
@@ -66,7 +66,6 @@ public:
     void reviveGame();
     void pauseGame();
     void resumeGame();
-    // void quit();
 
     Hud* m_hud;  // autorelease
 
@@ -100,7 +99,6 @@ private:
 
     void updatePlayer(float dt);
     void updateBall(float dt);
-    void updateHud(float dt);
 
     // create a wall
     std::unique_ptr<Wall> m_wall;
@@ -136,16 +134,6 @@ private:
     void onGameWin();
     void onReviveGame();
 
-    // shake
-    inline float noise(int x, int y) const
-    {
-        int n = x + y * 57;
-        n     = (n << 13) ^ n;
-        return (1.0 - ((n * ((n * n * 15731) + 789221) + 1376312589) & 0x7fffffff) / 1073741824.0);
-    };
-
-    void shakeScene();
-
     // coin
     Coin* coin;
     void createRandomCoin();
@@ -167,5 +155,10 @@ private:
     std::set<std::unique_ptr<Item>> itemScheduledForRemoval;
     void updateItems(float dt);
     void detachItemFromBoard(Item* item);
-    bool onItemsAllDetached{false};
+    bool isItemsAllDetached{false};
+
+    // other
+    bool onShakeBush();
+    bool onCollectCoin();
+    bool onItemsAllDetached();
 };

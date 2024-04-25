@@ -6,132 +6,119 @@
 USING_NS_AX;
 using namespace ui;
 
-GameOverLayer::GameOverLayer(const std::string& _mission) :
-	m_mission{ _mission }
+GameOverLayer::GameOverLayer(const std::string& _mission) : m_mission{_mission}
 {
-	m_origin = Director::getInstance()->getVisibleOrigin();
-	m_visibleSize = Director::getInstance()->getVisibleSize();
+    m_origin      = Director::getInstance()->getVisibleOrigin();
+    m_visibleSize = Director::getInstance()->getVisibleSize();
 }
 
-GameOverLayer* GameOverLayer::create(const std::string& _mission) {
-	auto pRet = new GameOverLayer(_mission);
-	if (pRet->init()) {
-		pRet->autorelease();
-	}
-	else
-	{
-		delete pRet;
-		pRet = nullptr;
-	}
-	return pRet;
+GameOverLayer* GameOverLayer::create(const std::string& _mission)
+{
+    auto pRet = new GameOverLayer(_mission);
+    if (pRet->init())
+    {
+        pRet->autorelease();
+    }
+    else
+    {
+        delete pRet;
+        pRet = nullptr;
+    }
+    return pRet;
 }
 
-bool GameOverLayer::init() {
-	if (!Layer::init())
-		return false;
+bool GameOverLayer::init()
+{
+    if (!Layer::init())
+        return false;
 
-	// play bounce sound
-	Audio::getInstance().playSfx(std::string(sound_audio::sad_crowd));
+    // play bounce sound
+    Audio::getInstance().playSfx(std::string(sound_audio::sad_crowd));
 
-	auto bgLayer = LayerColor::create(Color4B(0, 0, 0, 200));
-	this->addChild(bgLayer);
+    auto bgLayer = LayerColor::create(Color4B(0, 0, 0, 200));
+    this->addChild(bgLayer);
 
-	// overlay
-	overlayLayer = Layer::create();
-	this->addChild(overlayLayer);
+    // overlay
+    overlayLayer = Layer::create();
+    this->addChild(overlayLayer);
 
-	//setVisible(true);
+    // bg
+    bg = ax::ui::ImageView::create("gameover.png", Widget::TextureResType::LOCAL);
+    bg->setPosition(Vec2(m_visibleSize.width / 2.0f, m_visibleSize.height * 0.5f));
+    bg->setScale(m_visibleSize.width * 0.75f / bg->getContentSize().width,
+                 m_visibleSize.height / bg->getContentSize().height / 2);
+    bg->setScale9Enabled(true);
+    bg->setOpacity(0);
+    overlayLayer->addChild(bg, -1);
 
-	// make black
-	//this->setOpacity(0);
+    // Create a button
+    auto retryButton = ui::Button::create("btn_continue.png", "", "");
+    retryButton->setScale9Enabled(true);
+    retryButton->setPosition(Vec2(bg->getContentSize().width / 2.0f, -retryButton->getContentSize().height));
+    bg->addChild(retryButton);
 
-	//this->runAction(FadeTo::create(0.15f, 200));
+    retryButton->setOpacity(0);
+    auto fadeIn  = FadeIn::create(0.5f);
+    auto scaleUp = ScaleTo::create(0.5f, 1.0f);
 
-	// bg
-	bg = ax::ui::ImageView::create("gameover.png", Widget::TextureResType::LOCAL);
-	bg->setPosition(Vec2(m_visibleSize.width / 2.0f, m_visibleSize.height * 0.5f));
-	bg->setScale(m_visibleSize.width * 0.75f / bg->getContentSize().width, m_visibleSize.height / bg->getContentSize().height / 2);
-	bg->setScale9Enabled(true);
-	bg->setOpacity(0);
-	overlayLayer->addChild(bg, -1);
+    ax::CallFunc* pressButton = ax::CallFunc::create([this, retryButton]() {
+        // Add a click event listener to the button
+        retryButton->addClickEventListener([=, this](Ref* sender) {
+            if (this->isVisible())
+            {
+                this->setVisible(false);  // Hide the layer when the button is clicked
+                // start playing the game
+                if (m_gameScene)
+                {
+                    // Audio::getInstance().stopBgm();
 
-	// Create a button
-	auto retryButton = ui::Button::create("btn_continue.png", "", "");
-	retryButton->setScale9Enabled(true);
-	retryButton->setPosition(Vec2(bg->getContentSize().width / 2.0f, -retryButton->getContentSize().height));
-	bg->addChild(retryButton);
+                    // reset game
+                    m_gameScene->resetGame();
+                }
+            }
+        });
+    });
 
-	retryButton->setOpacity(0);
-	auto fadeIn = FadeIn::create(0.5f);
-	auto scaleUp = ScaleTo::create(0.5f, 1.0f);
+    auto sequence =
+        Sequence::create(DelayTime::create(1.5f), Spawn::create(fadeIn, scaleUp, nullptr), pressButton, nullptr);
+    retryButton->runAction(sequence);
 
-	ax::CallFunc* pressButton = ax::CallFunc::create([this, retryButton]() {
-		// Add a click event listener to the button
-		retryButton->addClickEventListener([=, this](Ref* sender) {
-			if (this->isVisible()) {
-				this->setVisible(false); // Hide the layer when the button is clicked
-				// start playing the game
-				if (m_gameScene) {
-					//
-					//Audio::getInstance().stopBgm();
+    // actions of bg
+    auto fadeInBg                 = FadeIn::create(0.5f);
+    ax::CallFunc* showItsChildren = ax::CallFunc::create([this]() {
+        // level
+        displayCurrentLevel();
+    });
+    auto sequenceBg               = Sequence::create(DelayTime::create(1.0f), fadeInBg, showItsChildren, nullptr);
+    bg->runAction(sequenceBg);
 
-					// reset game
-					m_gameScene->resetGame();
-				}
-			}
-			});
-		});
+    // swallow touches
+    auto listener = EventListenerTouchOneByOne::create();
+    listener->setSwallowTouches(true);  // Initialize with default value
+    listener->onTouchBegan = AX_CALLBACK_2(GameOverLayer::onTouchBegan, this);
+    _eventDispatcher->addEventListenerWithSceneGraphPriority(listener, this);
 
-	auto sequence = Sequence::create(DelayTime::create(1.5f),
-		Spawn::create(fadeIn, scaleUp, nullptr), pressButton, nullptr);
-	retryButton->runAction(sequence);
-
-	// actions of bg
-	auto fadeInBg = FadeIn::create(0.5f);
-	ax::CallFunc* showItsChildren = ax::CallFunc::create([this]() {
-		// level
-		displayCurrentLevel();
-		displayCurrentMission();
-		});
-	auto sequenceBg = Sequence::create(DelayTime::create(1.0f),
-		fadeInBg, showItsChildren, nullptr);
-	bg->runAction(sequenceBg);
-
-	// swallow touches
-	auto listener = EventListenerTouchOneByOne::create();
-	listener->setSwallowTouches(true);  // Initialize with default value
-	listener->onTouchBegan = AX_CALLBACK_2(GameOverLayer::onTouchBegan, this);
-	_eventDispatcher->addEventListenerWithSceneGraphPriority(listener, this);
-
-	return true;
+    return true;
 }
 
-void GameOverLayer::setGameSceneReference(GameScene* gameScene) {
-	m_gameScene = gameScene;
+void GameOverLayer::setGameSceneReference(GameScene* gameScene)
+{
+    m_gameScene = gameScene;
 }
 
-bool GameOverLayer::onTouchBegan(ax::Touch* touch, ax::Event* event) {
-	// If the game has started, let the touches propagate through
-	return true;
+bool GameOverLayer::onTouchBegan(ax::Touch* touch, ax::Event* event)
+{
+    // If the game has started, let the touches propagate through
+    return true;
 }
 
 void GameOverLayer::displayCurrentLevel()
 {
-	auto stars = "Level 1";
-	auto levelLabel = Label::createWithBMFont(fonts::hugmat_fnt, stars);
-	levelLabel->setBMFontSize(50.0f);
-	levelLabel->setColor(Color3B::BLACK);
-	levelLabel->setPositionX(bg->getContentSize().width / 2.0f);
-	levelLabel->setPositionY(bg->getContentSize().height * 0.8f);
-	bg->addChild(levelLabel);
-}
-
-void GameOverLayer::displayCurrentMission()
-{
-	auto missionLabel = Label::createWithBMFont(fonts::hugmat_fnt, m_mission);
-	missionLabel->setBMFontSize(40.0f);
-	missionLabel->setColor(Color3B::RED);
-	missionLabel->setPositionX(bg->getContentSize().width * 0.5f);
-	missionLabel->setPositionY(bg->getContentSize().height * 0.6f);
-	bg->addChild(missionLabel);
+    auto stars      = "Level 1";
+    auto levelLabel = Label::createWithBMFont(fonts::hugmat_fnt, stars);
+    levelLabel->setBMFontSize(50.0f);
+    levelLabel->setColor(Color3B::BLACK);
+    levelLabel->setPositionX(bg->getContentSize().width / 2.0f);
+    levelLabel->setPositionY(bg->getContentSize().height * 0.8f);
+    bg->addChild(levelLabel);
 }

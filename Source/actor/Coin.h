@@ -5,14 +5,14 @@
 class Coin : public ax::Sprite
 {
 public:
-	Coin();
-	~Coin() = default;
+    Coin();
+    ~Coin() override = default;
 
-	static Coin* create();
+    static Coin* create();
 
-	bool init() override;
-	inline int getValue() const { return m_value; }
+    bool init() override;
+    inline int getValue() const { return m_value; }
 
 private:
-	int m_value{ 5 };
+    int m_value{5};
 };

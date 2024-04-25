@@ -8,14 +8,13 @@
 #include "actor/item/Fruit.h"
 
 GameScene::GameScene()
-    : m_b2dr{}
-    , m_contactListener{}
-    , _isUpdatePaused{false}
+    : _isUpdatePaused{false}
     , _isStartGame{false}
     , _isGameOver{false}
     , _isWinGame{false}
     , _isReviveGame{false}
     , timeScale{1.0f}
+    , m_b2dr{}
 {
     m_visibleSize = Director::getInstance()->getVisibleSize();
     m_origin      = Director::getInstance()->getVisibleOrigin();
@@ -99,19 +98,6 @@ bool GameScene::init()
     touchListener->onTouchEnded = AX_CALLBACK_2(GameScene::onTouchEnded, this);
     _eventDispatcher->addEventListenerWithSceneGraphPriority(touchListener, this);
 
-    // show particles on collision
-    // listen to meteor hit ground and dispatch event
-    auto eventListener = EventListenerCustom::create(COLLISION_EVENT_ID, [this](ax::EventCustom* event) {
-        const Vec2* collisionPoint = static_cast<const Vec2*>(event->getUserData());
-        // CLOG("hit ground");
-        //  shake the scene
-        shakeScene();
-
-        auto dust = DustParticle::create();
-        dust->setupParticleProperties(*collisionPoint, "dirt_02.png");
-    });
-    _eventDispatcher->addEventListenerWithSceneGraphPriority(eventListener, this);
-
     // tick the box2d world
     schedule(AX_SCHEDULE_SELECTOR(GameScene::update));
 
@@ -142,69 +128,15 @@ void GameScene::update(float dt)
                 m_chain->update(dt);
 
                 // bush shake
-                if (!_isShakeBush && GameUtils::areSpritesIntersecting(m_ball->getBodySprite(), m_wall->_bushSprite))
-                {
-                    CLOG("bush n ball hit");
-
-                    // Define the shake duration and intensity
-                    float shakeDuration  = 0.5f;
-                    float shakeIntensity = 5.0f;
-
-                    // Create a sequence of MoveBy actions to simulate the shake effect
-                    auto shakeSequence = Sequence::create(MoveBy::create(0.05f, Vec2(shakeIntensity, 0)),
-                                                          MoveBy::create(0.05f, Vec2(-2 * shakeIntensity, 0)),
-                                                          MoveBy::create(0.05f, Vec2(2 * shakeIntensity, 0)),
-                                                          MoveBy::create(0.05f, Vec2(-2 * shakeIntensity, 0)),
-                                                          MoveBy::create(0.05f, Vec2(2 * shakeIntensity, 0)),
-                                                          MoveBy::create(0.05f, Vec2(-shakeIntensity, 0)), nullptr);
-
-                    m_wall->_bushSprite->runAction(shakeSequence);
-
-                    _isShakeBush = true;
-                }
+                onShakeBush();
 
                 // collect coins
-                if (_isStartGame && !_isGameOverHandled && !_isWinGameHandled)
-                {
-                    if (!isCoinCollected && GameUtils::areSpritesIntersecting(m_ball->getBodySprite(), coin))
-                    {
-                        totalCoin += coin->getValue();
-                        Vec2 targetPoint = m_hud->topContainer->coinBtnWorldPos;
-                        collectCoin(coin, targetPoint);
+                onCollectCoin();
 
-                        // play sound of collect coin
-                        Audio::getInstance().playSfx(std::string(sound_audio::coin_collect));
-
-                        isCoinCollected = true;
-                    }
-
-                    if (isCoinRemoved)
-                    {
-                        isCoinRemoved = false;
-                        this->scheduleOnce(
-                            [this](float dt) {
-                            isCoinCollected = false;
-                            // CLOG("removed");
-                            createRandomCoin();
-                            },
-                            3.0f, "checkCoinRemoved");
-                    }
-                }
                 // update items
                 updateItems(dt);
 
-                // if number of items to be placed on board equals number of items set for removal
-                if (auto totalItems{itemScheduledForRemoval.size()}; totalItems == 4 && !onItemsAllDetached)
-                {
-                    onItemsAllDetached = true;
-                    this->scheduleOnce(
-                        [this](float dt) {
-                        // setForRemoval = false;
-                        this->_isWinGame = true;
-                        CLOG("removed");
-                        },
-                        1.0f, "ready4removal");
-                }
+                onItemsAllDetached();
             }
 
             // Check for game over conditions
@@ -261,7 +193,7 @@ void GameScene::update(float dt)
 
     case GameState::gameover:
     {
-        this->unschedule("checkCoinRemoved");
+        this->unschedule("che*ckCoinRemoved");
 
         onGameOver();
         _isGameOver = false;
@@ -304,7 +236,7 @@ void GameScene::updatePlayer(float dt)
             float speed = 800.0f;  // Adjust the speed factor as needed
 
             // Only consider the x-component for movement
-            Vec2 movement = Vec2(direction.x, 0);
+            auto movement = Vec2(direction.x, 0);
 
             // Limit the cannon's movement within the screen
             movement.x = clampf(movement.x, -speed * fixedTimeStep, speed * fixedTimeStep);
@@ -313,16 +245,13 @@ void GameScene::updatePlayer(float dt)
             m_character->m_torso->getBody()->SetLinearVelocity(
                 b2Vec2(movement.x / GameUtils::PPM::kPpm / fixedTimeStep, 0));
 
-            // m_isTouchedOnCannon = true;
             const float positionTolerance = 1.0f;
 
             // Check if the cannon has reached the target position
             if (std::abs(currentPosition.x - targetTouchPos.x) < positionTolerance)
             {
-                // cannon->setPosition(targetTouchPos);
                 m_isTouchedOnCannon = true;
                 m_isTouched         = false;  // Stop further updates
-                                              // cannonBody->SetLinearVelocity(b2Vec2_zero); // Stop the cannon body
             }
         }
     }
@@ -360,7 +289,6 @@ void GameScene::onTouchMoved(ax::Touch* touch, ax::Event* event)
         Vec2 touchPos = touch->getLocation();
         float minX    = _director->getVisibleSize().width * 0.2f;
         float maxX    = _director->getVisibleSize().width * 0.8f;
-        // touchPos.x = clampf(touchPos.x, minX, maxX);
 
         if (touchPos.x >= minX && touchPos.x <= maxX)
         {
@@ -380,7 +308,6 @@ void GameScene::onTouchEnded(ax::Touch* touch, ax::Event* event)
     if (m_isTouchedOnCannon)
     {
         m_character->m_torso->getBody()->SetLinearVelocity(b2Vec2_zero);
-        // cannonBody->SetLinearVelocity({ 0, cannonBody->GetLinearVelocity().y });
         m_character->m_torso->getBody()->SetLinearDamping(10.0f);  // Adjust damping factor as needed
     }
 
@@ -443,9 +370,8 @@ void GameScene::createCharacter()
     // get the shape of the body
     float hx{};
     float hy{};
-    b2PolygonShape const* groundShape = dynamic_cast<b2PolygonShape*>(groundFixture->GetShape());
 
-    if (groundShape)
+    if (b2PolygonShape const* groundShape = dynamic_cast<b2PolygonShape*>(groundFixture->GetShape()))
     {
         // Get the half-width (hx) and half-height (hy) of the ground shape.
         hx = groundShape->m_vertices[1].x;  // Assuming the shape is symmetric, this is half the width.
@@ -503,7 +429,7 @@ void GameScene::resetGame()
     isCoinRemoved        = false;
     _isShakeBush         = false;
     totalCoin            = 0;
-    onItemsAllDetached   = false;
+    isItemsAllDetached   = false;
 
     // reset game state
     _gameState = GameState::init;
@@ -580,7 +506,7 @@ void GameScene::resetGame()
 
     // Recreate event listener for collisions
     auto eventListener = EventListenerCustom::create(COLLISION_EVENT_ID, [&](ax::EventCustom* event) {
-        const Vec2* collisionPoint = static_cast<const Vec2*>(event->getUserData());
+        const auto* collisionPoint = static_cast<const Vec2*>(event->getUserData());
         // CLOG("hit ground");
         auto dust = DustParticle::create();
         dust->setupParticleProperties(*collisionPoint, "dirt_02.png");
@@ -640,9 +566,6 @@ void GameScene::pauseGame()
         // create character
         createCharacter();
 
-        // health
-        m_hud->updateHearts(3);
-
         // Additional logic for pausing the game (if needed)
         auto playButton = ui::Button::create("transparentDark40.png", "", "");
         playButton->setPosition(Vec2(m_visibleSize.width / 2.0f, m_visibleSize.height * 0.5f));
@@ -680,8 +603,11 @@ void GameScene::handleContactItemBall(Item* item)
     else if (item && item->getNumContacts() == 2)
     {
         // Check if m1 is in meteorList
-        auto itemIt = std::find_if(m_boardItems.begin(), m_boardItems.end(),
-                                   [&](const std::unique_ptr<Item>& it) { return it.get() == item; });
+        // auto itemIt = std::find_if(m_boardItems.begin(), m_boardItems.end(),
+        //                           [&](const std::unique_ptr<Item>& it) { return it.get() == item; });
+
+        auto itemIt =
+            std::ranges::find_if(m_boardItems, [&](const std::unique_ptr<Item>& it) { return it.get() == item; });
 
         // schedule it for removal
         if (itemIt != m_boardItems.end())
@@ -746,7 +672,6 @@ void GameScene::playGame()
 {
     // ui
     m_hud->setVisible(true);
-    m_hud->setCurrentMission(1, 0, 40);
 
     //
     createRandomCoin();
@@ -774,7 +699,7 @@ void GameScene::onGameOver()
     // create revive layer
     // m_hud->setVisible(false);
 
-    m_gOverLayer = GameOverLayer::create(std::string(m_hud->getMissionLabel()->getString()));
+    m_gOverLayer = GameOverLayer::create(std::string("a"));
     m_gOverLayer->setGameSceneReference(this);
     addChild(m_gOverLayer, 9999);
 }
@@ -787,7 +712,7 @@ void GameScene::onGameWin()
     timeScale = _isGameOver || _isWinGame ? 0.09f : 1.0f;
 
     // create revive layer
-    m_victoryLayer = VictoryGameLayer::create(std::string(m_hud->getMissionLabel()->getString()));
+    m_victoryLayer = VictoryGameLayer::create(std::string("a"));
     m_victoryLayer->setGameSceneReference(this);
     addChild(m_victoryLayer, 190);
 }
@@ -801,56 +726,6 @@ void GameScene::onReviveGame()
     m_reviveLayer = ReviveGameLayer::create();
     m_reviveLayer->setGameSceneReference(this);
     addChild(m_reviveLayer, 190);
-}
-
-void GameScene::shakeScene()
-{
-    float interval  = 0.0f;
-    float duration  = 0.5f;
-    float speed     = 2.0f;
-    float magnitude = 1.0f;
-
-    static float elapsed = 0.0f;
-
-    // Use a unique name for the scheduled action
-    // int shakeActionTag = 200;
-
-    // Stop any existing shake action with the same name
-    // m_scene->stopActionByTag(shakeActionTag);
-
-    this->schedule(
-        [=](float dt) {
-        float randomStart = random(-1000.0f, 1000.0f);
-        elapsed += dt;
-
-        float percentComplete = elapsed / duration;
-
-        // We want to reduce the shake from full power to 0 starting halfway through
-        float damper = 1.0f - std::clamp(2.0f * percentComplete - 1.0f, 0.0f, 1.0f);
-
-        // Calculate the noise parameter starting randomly and going as fast as speed allows
-        float alpha = randomStart + speed * percentComplete;
-
-        // Map noise to [-1, 1]
-        auto x = noise(alpha, 0.0f) * 2.0f - 1.0f;
-        auto y = noise(0.0f, alpha) * 2.0f - 1.0f;
-
-        x *= magnitude * damper;
-        y *= magnitude * damper;
-
-        this->setPosition(Vec2(x, y));
-
-        if (elapsed >= duration)
-        {
-            elapsed = 0;
-            this->unschedule("Shake");
-            this->setPosition(Vec2::ZERO);
-        }
-        },
-        interval, AX_REPEAT_FOREVER, 0.0f, "Shake");
-
-    // Set a tag for the shake action
-    // m_scene->getActionManager()->getActionByTag(shakeActionTag, m_bodySprite)->setTag(shakeActionTag);
 }
 
 void GameScene::createRandomCoin()
@@ -925,9 +800,8 @@ void GameScene::clampChainToCeiling()
     // get the shape of the body
     float hx{};
     float hy{};
-    b2PolygonShape const* ceilingShape = dynamic_cast<b2PolygonShape*>(ceilingFixture->GetShape());
 
-    if (ceilingShape)
+    if (b2PolygonShape const* ceilingShape = dynamic_cast<b2PolygonShape*>(ceilingFixture->GetShape()))
     {
         // Get the half-width (hx) and half-height (hy) of the ground shape.
         hx = ceilingShape->m_vertices[1].x -
@@ -1008,7 +882,7 @@ void GameScene::placeItemsOnBoard()
     }
 
     // number of items to be placed on the board
-    int numItems = static_cast<int>(m_boardItems.size());
+    auto numItems = static_cast<int>(m_boardItems.size());
 
     // Radius of the circular arrangement
     float circleRadius = m_board->getRadius() * 1.0f;
@@ -1045,7 +919,7 @@ void GameScene::updateItems(float dt)
 {
     if (_isStartGame && !m_boardItems.empty())
     {
-        for (auto& items : m_boardItems)
+        for (auto const& items : m_boardItems)
         {
             if (items)
             {
@@ -1076,9 +950,9 @@ void GameScene::detachItemFromBoard(Item* item)
     b2JointEdge* jointEdge = item->getBody()->GetJointList();
     while (jointEdge)
     {
-        b2Joint* joint = jointEdge->joint;
-        if (joint->GetType() == e_weldJoint && joint->GetBodyA() == m_board->getBody() &&
-            joint->GetBodyB() == item->getBody())
+        if (b2Joint* joint = jointEdge->joint; joint->GetType() == e_weldJoint &&
+                                               joint->GetBodyA() == m_board->getBody() &&
+                                               joint->GetBodyB() == item->getBody())
         {
             // Destroy the weld joint
             m_world->DestroyJoint(joint);
@@ -1086,6 +960,77 @@ void GameScene::detachItemFromBoard(Item* item)
         }
         jointEdge = jointEdge->next;
     }
+}
+
+bool GameScene::onShakeBush()
+{
+    if (!_isShakeBush && GameUtils::areSpritesIntersecting(m_ball->getBodySprite(), m_wall->_bushSprite))
+    {
+        CLOG("bush n ball hit");
+
+        // Define the shake duration and intensity
+        float shakeIntensity = 5.0f;
+
+        // Create a sequence of MoveBy actions to simulate the shake effect
+        auto shakeSequence = Sequence::create(
+            MoveBy::create(0.05f, Vec2(shakeIntensity, 0)), MoveBy::create(0.05f, Vec2(-2 * shakeIntensity, 0)),
+            MoveBy::create(0.05f, Vec2(2 * shakeIntensity, 0)), MoveBy::create(0.05f, Vec2(-2 * shakeIntensity, 0)),
+            MoveBy::create(0.05f, Vec2(2 * shakeIntensity, 0)), MoveBy::create(0.05f, Vec2(-shakeIntensity, 0)),
+            nullptr);
+
+        m_wall->_bushSprite->runAction(shakeSequence);
+
+        _isShakeBush = true;
+    }
+
+    return _isShakeBush;
+}
+
+bool GameScene::onCollectCoin()
+{
+    if (_isStartGame && !_isGameOverHandled && !_isWinGameHandled)
+    {
+        if (!isCoinCollected && GameUtils::areSpritesIntersecting(m_ball->getBodySprite(), coin))
+        {
+            totalCoin += coin->getValue();
+            Vec2 targetPoint = m_hud->topContainer->coinBtnWorldPos;
+            collectCoin(coin, targetPoint);
+
+            // play sound of collect coin
+            Audio::getInstance().playSfx(std::string(sound_audio::coin_collect));
+
+            isCoinCollected = true;
+        }
+
+        if (isCoinRemoved)
+        {
+            isCoinRemoved = false;
+            this->scheduleOnce(
+                [this](float dt) {
+                isCoinCollected = false;
+                createRandomCoin();
+                },
+                3.0f, "checkCoinRemoved");
+        }
+    }
+    return isCoinCollected;
+}
+
+bool GameScene::onItemsAllDetached()
+{
+    // if number of items to be placed on board equals number of items set for removal
+    if (auto totalItems{itemScheduledForRemoval.size()}; totalItems == 4 && !isItemsAllDetached)
+    {
+        isItemsAllDetached = true;
+        this->scheduleOnce(
+            [this](float dt) {
+            this->_isWinGame = true;
+            CLOG("removed");
+            },
+            1.0f, "ready4removal");
+    }
+
+    return isItemsAllDetached;
 }
 
 void GameScene::removeMeteor(float dt)
