@@ -6,22 +6,26 @@
 class TopContainer : public ax::ui::Layout
 {
 public:
-	TopContainer();
-	~TopContainer() = default;
+    TopContainer();
+    ~TopContainer() = default;
 
-	static TopContainer* create();
+    static TopContainer* create();
 
-	bool init() override;
+    bool init() override;
 
-	void updateCoinLabel(int totalCoin);
-	ax::Vec2 coinBtnWorldPos;
+    void updateCoinLabel(int totalCoin);
+    ax::Vec2 coinBtnWorldPos;
+    void setGameLevel(int level);
+    int getGameLevel() const;
 
 private:
-	ax::Label* coinLabel;
-	ax::Size m_visibleSize;
-	ax::Vec2 m_origin;
+    ax::Label* coinLabel;
+    ax::Label* gameLevel;
+    ax::Size m_visibleSize;
+    ax::Vec2 m_origin;
+    int m_gameLevel{9};
 
-	void addHomeButton();
-	void addCoinButton();
-	void addLevelDisplay();
+    void addHomeButton();
+    void addCoinButton();
+    void addLevelDisplay();
 };

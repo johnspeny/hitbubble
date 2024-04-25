@@ -670,9 +670,6 @@ void GameScene::loadGame() {}
 
 void GameScene::playGame()
 {
-    // ui
-    m_hud->setVisible(true);
-
     //
     createRandomCoin();
 

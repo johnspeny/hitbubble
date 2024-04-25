@@ -31,7 +31,7 @@ bool Hud::init()
     if (!Layer::init())
         return false;
 
-    setVisible(false);
+    setVisible(true);
 
     displayMenuBar();
 
