@@ -14,16 +14,18 @@ public:
     bool init() override;
 
     void updateCoinLabel(int totalCoin);
+    void updateLevelLabel(int level);
     ax::Vec2 coinBtnWorldPos;
     void setGameLevel(int level);
     int getGameLevel() const;
 
 private:
     ax::Label* coinLabel;
-    ax::Label* gameLevel;
+    ax::Label* levelLabel;
     ax::Size m_visibleSize;
     ax::Vec2 m_origin;
-    int m_gameLevel{9};
+    int m_gameLevel{0};
+    int m_totalCoin{0};
 
     void addHomeButton();
     void addCoinButton();

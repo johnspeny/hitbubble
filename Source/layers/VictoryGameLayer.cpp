@@ -4,19 +4,26 @@
 #include "MainMenuLayer.h"
 #include "Audio.h"
 #include "particlez/FireWorksParticle.h"
+#include "rapidjson/filereadstream.h"
+#include "rapidjson/filewritestream.h"
+#include "rapidjson/writer.h"
+#include "rapidjson/prettywriter.h"
+
+#include "helpers/string_manipulation/zlibString.h"
+#include "helpers/string_manipulation/base64.h"
 
 USING_NS_AX;
 using namespace ui;
 
-VictoryGameLayer::VictoryGameLayer(const std::string& _mission) : m_mission{_mission}
+VictoryGameLayer::VictoryGameLayer(const std::string& level, int coin) : m_currentLevel{level}, m_collectedCoins{coin}
 {
     m_origin      = Director::getInstance()->getVisibleOrigin();
     m_visibleSize = Director::getInstance()->getVisibleSize();
 }
 
-VictoryGameLayer* VictoryGameLayer::create(const std::string& _mission)
+VictoryGameLayer* VictoryGameLayer::create(const std::string& level, int coin)
 {
-    auto pRet = new VictoryGameLayer(_mission);
+    auto pRet = new VictoryGameLayer(level, coin);
     if (pRet->init())
     {
         pRet->autorelease();
@@ -33,6 +40,10 @@ bool VictoryGameLayer::init()
 {
     if (!Layer::init())
         return false;
+
+    // save coins collected
+    UserDefault::getInstance()->setIntegerForKey("Coin", m_collectedCoins);
+    UserDefault::getInstance()->flush();
 
     // play bounce sound
     Audio::getInstance().playSfx(std::string(sound_audio::applause));
@@ -72,11 +83,12 @@ bool VictoryGameLayer::init()
                 // start playing the game
                 if (m_gameScene)
                 {
-                    //
                     // Audio::getInstance().stopBgm();
 
                     // reset game
                     m_gameScene->resetGame();
+
+                    // go to next level
                 }
             }
         });
@@ -119,8 +131,8 @@ bool VictoryGameLayer::onTouchBegan(ax::Touch* touch, ax::Event* event)
 
 void VictoryGameLayer::displayCurrentLevel()
 {
-    auto stars      = "Level 1";
-    auto levelLabel = Label::createWithBMFont(fonts::hugmat_fnt, stars);
+    auto level      = StringUtils::format("Level %s", m_currentLevel.c_str());
+    auto levelLabel = Label::createWithBMFont(fonts::hugmat_fnt, m_currentLevel);
     levelLabel->setBMFontSize(50.0f);
     levelLabel->setColor(Color3B::BLACK);
     levelLabel->setPositionX(bg->getContentSize().width / 2.0f);

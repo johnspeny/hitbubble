@@ -18,6 +18,10 @@
 #include "actor/Coin.h"
 #include "actor/item/Item.h"
 #include "actor/item/Fruit.h"
+#include "rapidjson/document.h"
+#include "rapidjson/filewritestream.h"
+#include <rapidjson/writer.h>
+#include "season/Season.h"
 
 USING_NS_AX;
 
@@ -161,4 +165,11 @@ private:
     bool onShakeBush();
     bool onCollectCoin();
     bool onItemsAllDetached();
+
+    // seasons
+    int m_currentSeasonIndex;
+    int m_totalSeasons{};
+    std::vector<std::unique_ptr<Season>> m_seasons;
+    void loadSeasonFromJsonFile();
+    void createSeason();
 };

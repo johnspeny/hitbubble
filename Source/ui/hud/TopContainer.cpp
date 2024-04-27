@@ -8,6 +8,7 @@ TopContainer::TopContainer()
 {
     m_origin      = Director::getInstance()->getVisibleOrigin();
     m_visibleSize = Director::getInstance()->getVisibleSize();
+    m_totalCoin   = UserDefault::getInstance()->getIntegerForKey("Coin", 0);
 }
 
 TopContainer* TopContainer::create()
@@ -83,7 +84,8 @@ void TopContainer::addCoinButton()
     coinBtnWorldPos = coinBtn->getParent()->convertToWorldSpace(coinBtn->getPosition());
     ;
 
-    coinLabel = Label::createWithBMFont(fonts::eng_cin_fnt, "0");
+    auto totalCoin = std::to_string(m_totalCoin);
+    coinLabel      = Label::createWithBMFont(fonts::eng_cin_fnt, totalCoin);
     coinLabel->setBMFontSize(24.0f);
     coinLabel->setAnchorPoint(Vec2::ANCHOR_MIDDLE_RIGHT);
     coinLabel->setPositionX(this->getContentSize().width - coinBtn->getContentSize().width * coinBtn->getScale() -
@@ -94,8 +96,8 @@ void TopContainer::addCoinButton()
 
 void TopContainer::addLevelDisplay()
 {
-    auto level      = std::format("Level {}", m_gameLevel);
-    auto levelLabel = Label::createWithBMFont(fonts::eng_cin_fnt, level);
+    auto level = StringUtils::format("Level %d", m_gameLevel);
+    levelLabel = Label::createWithBMFont(fonts::eng_cin_fnt, level);
     levelLabel->setBMFontSize(20.0f);
     levelLabel->setColor(Color3B::BLACK);
     levelLabel->setPositionX(this->getContentSize().width / 2.0f);
@@ -109,6 +111,11 @@ void TopContainer::updateCoinLabel(int totalCoin)
     {
         coinLabel->setString(std::to_string(totalCoin));
     }
+}
+
+void TopContainer::updateLevelLabel(int level)
+{
+    levelLabel->setString(StringUtils::format("Level %d", level));
 }
 
 void TopContainer::setGameLevel(int level)

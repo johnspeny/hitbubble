@@ -1,0 +1,50 @@
+{
+    "seasons": [
+        {
+            "id": 1,
+            "name": "1",
+            "levels": [
+                {
+                    "id": 1,
+                    "name": "1",
+                    "completed": false,
+                    "unlocked": true,
+                    "points": 0,
+                    "pointsAwarded": false
+                },
+                {
+                    "id": 2,
+                    "name": "2",
+                    "completed": false,
+                    "unlocked": false,
+                    "points": 0,
+                    "pointsAwarded": false
+                },
+                {
+                    "id": 3,
+                    "name": "3",
+                    "completed": false,
+                    "unlocked": false,
+                    "points": 0,
+                    "pointsAwarded": false
+                },
+                {
+                    "id": 4,
+                    "name": "4",
+                    "completed": false,
+                    "unlocked": false,
+                    "points": 0,
+                    "pointsAwarded": false
+                },
+                {
+                    "id": 5,
+                    "name": "5",
+                    "completed": false,
+                    "unlocked": false,
+                    "points": 0,
+                    "pointsAwarded": false
+                }
+            ]
+        }
+    ]
+}

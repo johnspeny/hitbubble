@@ -50,7 +50,7 @@ bool Fruit::showOnGameScene(const Vec2& position)
 
     // add to this scene
     auto snmg = SceneManager::getInstance().getCurrentScene<GameScene>();
-    snmg->addChild(m_bodySprite, 1000);
+    snmg->addChild(m_bodySprite, 1);
 
     // add the label to the fruit
     lifeLabel = Label::createWithBMFont(fonts::hugmat_fnt, std::to_string(m_lifeVal));

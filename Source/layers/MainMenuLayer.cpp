@@ -9,6 +9,9 @@ MainMenuLayer::MainMenuLayer() : m_touchBgImage{}
 {
     m_origin      = Director::getInstance()->getVisibleOrigin();
     m_visibleSize = Director::getInstance()->getVisibleSize();
+
+    // get total stored coin
+    m_totalCoin = UserDefault::getInstance()->getIntegerForKey("Coin", 0);
 }
 
 MainMenuLayer* MainMenuLayer::create()

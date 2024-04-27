@@ -125,6 +125,9 @@ list(APPEND GAME_SOURCE
         source/layers/ReviveGameLayer.cpp
         source/layers/GameOverLayer.cpp
         source/layers/VictoryGameLayer.cpp
+
+        # data
+        source/season/Season.cpp
         )
 
 list(APPEND GAME_HEADER
@@ -189,6 +192,9 @@ list(APPEND GAME_HEADER
         source/layers/ReviveGameLayer.h
         source/layers/GameOverLayer.h
         source/layers/VictoryGameLayer.h
+
+        # data
+        source/season/Season.h
         )
 
 

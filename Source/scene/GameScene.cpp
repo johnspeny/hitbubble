@@ -6,6 +6,8 @@
 #include "particlez/DustParticle.h"
 #include "Audio.h"
 #include "actor/item/Fruit.h"
+#include "helpers/string_manipulation/zlibString.h"
+#include "helpers/string_manipulation/base64.h"
 
 GameScene::GameScene()
     : _isUpdatePaused{false}
@@ -19,6 +21,8 @@ GameScene::GameScene()
     m_visibleSize = Director::getInstance()->getVisibleSize();
     m_origin      = Director::getInstance()->getVisibleOrigin();
     GameUtils::PPM::initVars();
+    // current season screen
+    m_currentSeasonIndex = UserDefault::getInstance()->getIntegerForKey("CurrentSeasonIndex", 0);
 }
 
 GameScene::~GameScene()
@@ -68,8 +72,13 @@ bool GameScene::init()
     if (!ax::Scene::init())
         return false;
 
+    // load Seasons From JsonFile
+    //loadSeasonFromJsonFile();
+    //createSeason();
+
     m_hud = Hud::create();
     m_hud->setGameSceneReference(this);
+    m_hud->topContainer->setGameLevel(std::stoi(m_seasons[m_currentSeasonIndex]->getName()));
     addChild(m_hud, 99);
 
     // create mainmenu layer
@@ -111,6 +120,9 @@ void GameScene::update(float dt)
     case GameState::init:
     {
         _gameState = GameState::update;
+        CLOG("init");
+        // update the level on game start
+        //m_hud->topContainer->updateLevelLabel(std::stoi(m_seasons[m_currentSeasonIndex]->getName()));
         break;
     }
 
@@ -603,11 +615,12 @@ void GameScene::handleContactItemBall(Item* item)
     else if (item && item->getNumContacts() == 2)
     {
         // Check if m1 is in meteorList
-        // auto itemIt = std::find_if(m_boardItems.begin(), m_boardItems.end(),
-        //                           [&](const std::unique_ptr<Item>& it) { return it.get() == item; });
+        auto itemIt = std::find_if(m_boardItems.begin(), m_boardItems.end(),
+                                   [&](const std::unique_ptr<Item>& it) { return it.get() == item; });
 
-        auto itemIt =
-            std::ranges::find_if(m_boardItems, [&](const std::unique_ptr<Item>& it) { return it.get() == item; });
+        //        auto itemIt =
+        //            std::ranges::find_if(m_boardItems, [&](const std::unique_ptr<Item>& it) { return it.get() == item;
+        //            });
 
         // schedule it for removal
         if (itemIt != m_boardItems.end())
@@ -653,6 +666,9 @@ void GameScene::restartGameWithTransition()
 
 void GameScene::startNewGame()
 {
+    // get total stored coin
+    totalCoin = UserDefault::getInstance()->getIntegerForKey("Coin", 0);
+
     // create enclosing wall
     createWall();
 
@@ -709,7 +725,9 @@ void GameScene::onGameWin()
     timeScale = _isGameOver || _isWinGame ? 0.09f : 1.0f;
 
     // create revive layer
-    m_victoryLayer = VictoryGameLayer::create(std::string("a"));
+    auto coinTotal    = totalCoin;
+    auto currentLevel = m_seasons[m_currentSeasonIndex]->getName();
+    m_victoryLayer    = VictoryGameLayer::create(currentLevel, coinTotal);
     m_victoryLayer->setGameSceneReference(this);
     addChild(m_victoryLayer, 190);
 }
@@ -740,7 +758,7 @@ void GameScene::createRandomCoin()
     float randomX = distX(gen);
 
     // Set a random y position within the specified range
-    std::uniform_real_distribution<float> distY(m_visibleSize.height * 0.4f, m_visibleSize.height * 0.7f);
+    std::uniform_real_distribution<float> distY(m_visibleSize.height * 0.4f, m_visibleSize.height * 0.6f);
     float randomY = distY(gen);
 
     coin->setPosition(Vec2(randomX, randomY));
@@ -1024,10 +1042,97 @@ bool GameScene::onItemsAllDetached()
             this->_isWinGame = true;
             CLOG("removed");
             },
-            1.0f, "ready4removal");
+            0.6f, "ready4removal");
     }
 
     return isItemsAllDetached;
+}
+
+void GameScene::loadSeasonFromJsonFile()
+{
+    // load data from json file
+    auto contentSrc = FileUtils::getInstance()->getDataFromFile(game_data::season_level_filepath);
+    // write data to external storage
+    auto fileUtils   = FileUtils::getInstance();
+    std::string path = fileUtils->getWritablePath() + "season_level.json";
+    if (!fileUtils->isFileExist(path))
+    {
+        // then read from writable path
+        auto content = fileUtils->getDataFromFile(game_data::season_level_filepath);
+        std::string contentString((const char*)content.getBytes(), content.getSize());
+
+        // compress the data
+        auto enc  = zlibString::compress_string(contentString);
+        auto enc2 = Strings::to_base64(enc);
+
+        fileUtils->writeStringToFile(enc2, path);
+    }
+}
+
+void GameScene::createSeason()
+{
+    // get writable path
+    std::string path = FileUtils::getInstance()->getWritablePath() + "season_level.json";
+
+    // load data from json file
+    auto jsonData = FileUtils::getInstance()->getDataFromFile(path);
+    std::string contentString((const char*)jsonData.getBytes(), jsonData.getSize());
+
+    // decrypt/decode the data
+    auto decode               = Strings::from_base64(contentString);
+    auto decodedContentString = zlibString::decompress_string(decode);
+
+    // parse json
+    rapidjson::Document m_document;
+    m_document.Parse<0>(decodedContentString.c_str());
+
+    // populate season and level with data from json document
+    if (!m_document.HasParseError())
+    {
+        // get the season array from the json document
+        auto& seasonsArray = m_document["seasons"];
+
+        // iterate through every season in the array
+        m_totalSeasons = static_cast<int>(seasonsArray.Size());
+
+        for (rapidjson::SizeType i = 0; i < m_totalSeasons; i++)
+        {
+            auto& seasonObject = seasonsArray[i];
+
+            // get the 'name' property of the season
+            std::string seasonName = seasonObject["name"].GetString();
+
+            // create a Season Object
+            auto season = std::make_unique<Season>(seasonName);
+
+            // add the season object to this a pool to select level
+            m_seasons.push_back(std::move(season));
+
+            // Get the 'levels' array for the current season
+            rapidjson::Value& levelsArray = seasonObject["levels"];
+
+            // Iterate over each level in the array
+            for (rapidjson::SizeType j = 0; j < levelsArray.Size(); j++)
+            {
+                rapidjson::Value& levelObject = levelsArray[j];
+
+                // Get the properties of the level
+                int levelID           = levelObject["id"].GetInt();
+                std::string levelName = levelObject["name"].GetString();
+                bool isCompleted      = levelObject["completed"].GetBool();
+                bool isUnlocked       = levelObject["unlocked"].GetBool();
+
+                // Create a Level object and Add the level to the season
+//                m_seasons.back()->addLevel(
+//                    std::make_unique<Level>(levelID, levelName, isCompleted, isUnlocked, 0, false));
+            }
+        }
+    }
+    else
+    {
+        // ax::log("json has errors");
+        return;
+    }
 }
 
 void GameScene::removeMeteor(float dt)

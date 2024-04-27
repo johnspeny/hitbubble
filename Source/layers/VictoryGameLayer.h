@@ -8,26 +8,27 @@ class GameScene;
 class VictoryGameLayer : public ax::Layer
 {
 public:
-	static VictoryGameLayer* create(const std::string& m_mission);
-	bool init() override;
-	void setGameSceneReference(GameScene* gameScene);
+    static VictoryGameLayer* create(const std::string& level, int coin);
+    bool init() override;
+    void setGameSceneReference(GameScene* gameScene);
 
 private:
-	ax::Size m_visibleSize;
-	ax::Vec2 m_origin;
+    ax::Size m_visibleSize;
+    ax::Vec2 m_origin;
+    int m_seasonIndex;
+    int m_levelIndex;
 
-	// data
-	std::string m_currentLevel;
-	std::string m_collectedCoins;
-	std::string m_mission;
-	std::string m_rewards;
+    // data
+    std::string m_currentLevel;
+    int m_collectedCoins;
+    std::string m_rewards;
 
-	VictoryGameLayer(const std::string& _mission);
-	GameScene* m_gameScene;
-	ax::Layer* overlayLayer;
-	ax::ui::ImageView* bg;
+    VictoryGameLayer(const std::string& m_level, int coin);
+    GameScene* m_gameScene;
+    ax::Layer* overlayLayer;
+    ax::ui::ImageView* bg;
 
-	bool onTouchBegan(ax::Touch* touch, ax::Event* event);
-	void displayCurrentLevel();
-	void displayCurrentMission();
+    bool onTouchBegan(ax::Touch* touch, ax::Event* event);
+    void displayCurrentLevel();
+    void goToNextLevel();
 };
