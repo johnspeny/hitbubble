@@ -6,8 +6,6 @@
 #include "particlez/DustParticle.h"
 #include "Audio.h"
 #include "actor/item/Fruit.h"
-#include "helpers/string_manipulation/zlibString.h"
-#include "helpers/string_manipulation/base64.h"
 
 GameScene::GameScene()
     : _isUpdatePaused{false}
@@ -22,7 +20,7 @@ GameScene::GameScene()
     m_origin      = Director::getInstance()->getVisibleOrigin();
     GameUtils::PPM::initVars();
     // current season screen
-    m_currentSeasonIndex = UserDefault::getInstance()->getIntegerForKey("CurrentSeasonIndex", 0);
+    // m_currentSeasonIndex = UserDefault::getInstance()->getIntegerForKey("CurrentSeasonIndex", 0);
 }
 
 GameScene::~GameScene()
@@ -72,13 +70,8 @@ bool GameScene::init()
     if (!ax::Scene::init())
         return false;
 
-    // load Seasons From JsonFile
-    //loadSeasonFromJsonFile();
-    //createSeason();
-
     m_hud = Hud::create();
     m_hud->setGameSceneReference(this);
-    m_hud->topContainer->setGameLevel(std::stoi(m_seasons[m_currentSeasonIndex]->getName()));
     addChild(m_hud, 99);
 
     // create mainmenu layer
@@ -122,7 +115,8 @@ void GameScene::update(float dt)
         _gameState = GameState::update;
         CLOG("init");
         // update the level on game start
-        //m_hud->topContainer->updateLevelLabel(std::stoi(m_seasons[m_currentSeasonIndex]->getName()));
+        // m_hud->topContainer->updateLevelLabel(std::stoi(m_seasons[m_currentSeasonIndex]->getName()));
+        m_hud->topContainer->updateLevelLabel(m_currentLevelIndex);
         break;
     }
 
@@ -655,12 +649,12 @@ void GameScene::restartGameWithTransition()
     fadeLayer->setVisible(true);
     this->runAction(Sequence::create(DelayTime::create(duration),  // Wait for the fade-out to complete
                                      CallFunc::create([&]() {
-                                         fadeLayer->setVisible(false);
-                                         fadeLayer->removeFromParentAndCleanup(true);
-                                         fadeLayer = nullptr;
-                                         resetGame();
-                                         _isUpdatePaused = false;
-                                     }),
+        fadeLayer->setVisible(false);
+        fadeLayer->removeFromParentAndCleanup(true);
+        fadeLayer = nullptr;
+        resetGame();
+        _isUpdatePaused = false;
+    }),
                                      nullptr));
 }
 
@@ -724,10 +718,12 @@ void GameScene::onGameWin()
     // set
     timeScale = _isGameOver || _isWinGame ? 0.09f : 1.0f;
 
-    // create revive layer
-    auto coinTotal    = totalCoin;
-    auto currentLevel = m_seasons[m_currentSeasonIndex]->getName();
-    m_victoryLayer    = VictoryGameLayer::create(currentLevel, coinTotal);
+    // Create revive layer
+    auto coinTotal     = totalCoin;
+    auto currentSeason = m_currentSeasonIndex;
+    auto currentLevel  = m_currentLevelIndex;
+    // m_seasons[m_currentSeasonIndex]->getName();
+    m_victoryLayer = VictoryGameLayer::create(currentSeason, currentLevel, coinTotal);
     m_victoryLayer->setGameSceneReference(this);
     addChild(m_victoryLayer, 190);
 }
@@ -881,7 +877,7 @@ void GameScene::clamplBoardToEndOfChain()
 
 void GameScene::createItems()
 {
-    int totalItems{4};
+    int totalItems{m_totalItems};
     for (int i = 0; i < totalItems; ++i)
     {
         auto item = std::make_unique<Fruit>(2);
@@ -1024,7 +1020,7 @@ bool GameScene::onCollectCoin()
                 [this](float dt) {
                 isCoinCollected = false;
                 createRandomCoin();
-                },
+            },
                 3.0f, "checkCoinRemoved");
         }
     }
@@ -1034,105 +1030,18 @@ bool GameScene::onCollectCoin()
 bool GameScene::onItemsAllDetached()
 {
     // if number of items to be placed on board equals number of items set for removal
-    if (auto totalItems{itemScheduledForRemoval.size()}; totalItems == 4 && !isItemsAllDetached)
+    if (auto totalItems{itemScheduledForRemoval.size()}; totalItems == m_totalItems && !isItemsAllDetached)
     {
         isItemsAllDetached = true;
         this->scheduleOnce(
             [this](float dt) {
             this->_isWinGame = true;
             CLOG("removed");
-            },
+        },
             0.6f, "ready4removal");
     }
 
     return isItemsAllDetached;
-}
-
-void GameScene::loadSeasonFromJsonFile()
-{
-    // load data from json file
-    auto contentSrc = FileUtils::getInstance()->getDataFromFile(game_data::season_level_filepath);
-    // write data to external storage
-    auto fileUtils   = FileUtils::getInstance();
-    std::string path = fileUtils->getWritablePath() + "season_level.json";
-    if (!fileUtils->isFileExist(path))
-    {
-        // then read from writable path
-        auto content = fileUtils->getDataFromFile(game_data::season_level_filepath);
-        std::string contentString((const char*)content.getBytes(), content.getSize());
-
-        // compress the data
-        auto enc  = zlibString::compress_string(contentString);
-        auto enc2 = Strings::to_base64(enc);
-
-        fileUtils->writeStringToFile(enc2, path);
-    }
-}
-
-void GameScene::createSeason()
-{
-    // get writable path
-    std::string path = FileUtils::getInstance()->getWritablePath() + "season_level.json";
-
-    // load data from json file
-    auto jsonData = FileUtils::getInstance()->getDataFromFile(path);
-    std::string contentString((const char*)jsonData.getBytes(), jsonData.getSize());
-
-    // decrypt/decode the data
-    auto decode               = Strings::from_base64(contentString);
-    auto decodedContentString = zlibString::decompress_string(decode);
-
-    // parse json
-    rapidjson::Document m_document;
-    m_document.Parse<0>(decodedContentString.c_str());
-
-    // populate season and level with data from json document
-    if (!m_document.HasParseError())
-    {
-        // get the season array from the json document
-        auto& seasonsArray = m_document["seasons"];
-
-        // iterate through every season in the array
-        m_totalSeasons = static_cast<int>(seasonsArray.Size());
-
-        for (rapidjson::SizeType i = 0; i < m_totalSeasons; i++)
-        {
-            auto& seasonObject = seasonsArray[i];
-
-            // get the 'name' property of the season
-            std::string seasonName = seasonObject["name"].GetString();
-
-            // create a Season Object
-            auto season = std::make_unique<Season>(seasonName);
-
-            // add the season object to this a pool to select level
-            m_seasons.push_back(std::move(season));
-
-            // Get the 'levels' array for the current season
-            rapidjson::Value& levelsArray = seasonObject["levels"];
-
-            // Iterate over each level in the array
-            for (rapidjson::SizeType j = 0; j < levelsArray.Size(); j++)
-            {
-                rapidjson::Value& levelObject = levelsArray[j];
-
-                // Get the properties of the level
-                int levelID           = levelObject["id"].GetInt();
-                std::string levelName = levelObject["name"].GetString();
-                bool isCompleted      = levelObject["completed"].GetBool();
-                bool isUnlocked       = levelObject["unlocked"].GetBool();
-
-                // Create a Level object and Add the level to the season
-//                m_seasons.back()->addLevel(
-//                    std::make_unique<Level>(levelID, levelName, isCompleted, isUnlocked, 0, false));
-            }
-        }
-    }
-    else
-    {
-        // ax::log("json has errors");
-        return;
-    }
 }
 
 void GameScene::removeMeteor(float dt)
@@ -1152,12 +1061,13 @@ void GameScene::removeMeteor(float dt)
             // destroy its body
             // dyingMeteor->destroyBody();
             detachItemFromBoard(dyingMeteor.get());
-
-            // Remove Meteor from the scene
-            // this->removeChild(dyingMeteor->getBodySprite());
         }
-
-        // Clear the list for the next time
-        // itemScheduledForRemoval.clear();
     }
+}
+
+void GameScene::setCurrentIndices(int currentSeasonIndex, int currentLevelIndex, int totalItems)
+{
+    m_currentLevelIndex  = currentLevelIndex;
+    m_currentSeasonIndex = currentSeasonIndex;
+    m_totalItems         = totalItems;
 }

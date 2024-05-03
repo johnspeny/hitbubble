@@ -8,7 +8,7 @@ class GameScene;
 class VictoryGameLayer : public ax::Layer
 {
 public:
-    static VictoryGameLayer* create(const std::string& level, int coin);
+    static VictoryGameLayer* create(int seasonId, int levelId, int coin);
     bool init() override;
     void setGameSceneReference(GameScene* gameScene);
 
@@ -19,11 +19,10 @@ private:
     int m_levelIndex;
 
     // data
-    std::string m_currentLevel;
     int m_collectedCoins;
     std::string m_rewards;
 
-    VictoryGameLayer(const std::string& m_level, int coin);
+    VictoryGameLayer(int seasonId, int levelId, int coin);
     GameScene* m_gameScene;
     ax::Layer* overlayLayer;
     ax::ui::ImageView* bg;

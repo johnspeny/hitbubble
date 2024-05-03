@@ -1,6 +1,9 @@
 #include "MainMenuLayer.h"
 #include "Constants.h"
 #include "scene/GameScene.h"
+#include "helpers/Logger.h"
+#include "helpers/string_manipulation/zlibString.h"
+#include "helpers/string_manipulation/base64.h"
 
 USING_NS_AX;
 using namespace ui;
@@ -12,6 +15,10 @@ MainMenuLayer::MainMenuLayer() : m_touchBgImage{}
 
     // get total stored coin
     m_totalCoin = UserDefault::getInstance()->getIntegerForKey("Coin", 0);
+
+    // current season screen
+    m_currentSeasonIndex = UserDefault::getInstance()->getIntegerForKey("CurrentSeasonIndex", 0);
+    m_currentLevelIndex  = UserDefault::getInstance()->getIntegerForKey("CurrentLevelIndex", 0);
 }
 
 MainMenuLayer* MainMenuLayer::create()
@@ -33,6 +40,13 @@ bool MainMenuLayer::init()
 {
     if (!LayerColor::initWithColor(Color4B(255, 0, 0, 0)))
         return false;
+
+    CLOG("MainMenu");
+    loadSeasonFromJsonFile();
+    createSeason();
+
+    // auto l = m_seasons[m_currentSeasonIndex]->getName();
+    auto& l = m_seasons[m_currentSeasonIndex]->getLevels().at(0);
 
     // Create a button -------------------------------------------------------------------------
     auto playButton = ui::Button::create("transparentDark40.png", "", "");
@@ -75,6 +89,7 @@ bool MainMenuLayer::init()
                 m_gameScene->playGame();
                 m_gameScene->_isStartGame = true;
                 updateSwallowTouches();
+
                 // Remove the MainMenuLayer from its parent
                 this->removeFromParentAndCleanup(true);
             }
@@ -106,6 +121,9 @@ void MainMenuLayer::updateSwallowTouches()
 void MainMenuLayer::setGameSceneReference(GameScene* gameScene)
 {
     m_gameScene = gameScene;
+    // get current level
+    auto items = m_seasons[m_currentSeasonIndex]->getLevels()[m_currentLevelIndex]->items;
+    m_gameScene->setCurrentIndices(m_currentSeasonIndex + 1, m_currentLevelIndex + 1, items);
     updateSwallowTouches();
 }
 
@@ -117,6 +135,102 @@ bool MainMenuLayer::onTouchBegan(ax::Touch* touch, ax::Event* event)
         return true;
     }
 
-    // If the game has started, let the touches propagate through
     return false;
+}
+
+void MainMenuLayer::loadSeasonFromJsonFile()
+{
+    // load data from json file
+    auto contentSrc = FileUtils::getInstance()->getDataFromFile(game_data::season_level_filepath);
+    // write data to external storage
+    auto fileUtils   = FileUtils::getInstance();
+    std::string path = fileUtils->getWritablePath() + "season_level.json";
+    if (!fileUtils->isFileExist(path))
+    {
+        // then read from writable path
+        auto content = fileUtils->getDataFromFile(game_data::season_level_filepath);
+        std::string contentString((const char*)content.getBytes(), content.getSize());
+
+        // compress the data
+        auto enc  = zlibString::compress_string(contentString);
+        auto enc2 = Strings::to_base64(enc);
+
+        fileUtils->writeStringToFile(enc2, path);
+    }
+}
+
+void MainMenuLayer::createSeason()
+{
+    // get writable path
+    std::string path = FileUtils::getInstance()->getWritablePath() + "season_level.json";
+
+    // load data from json file
+    auto jsonData = FileUtils::getInstance()->getDataFromFile(path);
+    std::string contentString((const char*)jsonData.getBytes(), jsonData.getSize());
+
+    // decrypt/decode the data
+    auto decode               = Strings::from_base64(contentString);
+    auto decodedContentString = zlibString::decompress_string(decode);
+
+    // parse json
+    rapidjson::Document m_document;
+    m_document.Parse<0>(decodedContentString.c_str());
+
+    // populate season and level with data from json document
+    if (!m_document.HasParseError())
+    {
+        // get the season array from the json document
+        auto& seasonsArray = m_document["seasons"];
+
+        // iterate through every season in the array
+        m_totalSeasons = static_cast<int>(seasonsArray.Size());
+
+        for (rapidjson::SizeType i = 0; i < m_totalSeasons; i++)
+        {
+            auto& seasonObject = seasonsArray[i];
+
+            // get the 'name' property of the season
+            std::string seasonName = seasonObject["name"].GetString();
+
+            // create a Season Object
+            auto season = std::make_unique<Season>(seasonName);
+
+            // add the season object to this a pool to select level
+            m_seasons.push_back(std::move(season));
+
+            // Get the 'levels' array for the current season
+            rapidjson::Value& levelsArray = seasonObject["levels"];
+
+            // Iterate over each level in the array
+            for (rapidjson::SizeType j = 0; j < levelsArray.Size(); j++)
+            {
+                rapidjson::Value& levelObject = levelsArray[j];
+
+                // Get the properties of the level
+                int levelID           = levelObject["id"].GetInt();
+                std::string levelName = levelObject["name"].GetString();
+                bool isCompleted      = levelObject["completed"].GetBool();
+                int items             = levelObject["items"].GetInt();
+                bool isUnlocked       = levelObject["unlocked"].GetBool();
+
+                // Create a Level object and Add the level to the season
+                auto level           = std::make_unique<Level>();
+                level->id            = levelID;
+                level->name          = levelName;
+                level->completed     = isCompleted;
+                level->unlocked      = isUnlocked;
+                level->items         = items;
+                level->pointsAwarded = false;
+
+                // Create a Level object and Add the level to the season
+                m_seasons.back()->addLevel(std::move(level));
+            }
+        }
+    }
+    else
+    {
+        // ax::log("json has errors");
+        return;
+    }
+    // m_seasons[m_currentSeasonIndex]->getName()
 }

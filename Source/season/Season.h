@@ -10,7 +10,7 @@ struct Level
     std::string name;
     bool completed;
     bool unlocked;
-    int points;
+    int items;
     bool pointsAwarded;
 };
 

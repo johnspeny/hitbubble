@@ -11,19 +11,21 @@
 
 #include "helpers/string_manipulation/zlibString.h"
 #include "helpers/string_manipulation/base64.h"
+#include "GameUtils.h"
 
 USING_NS_AX;
 using namespace ui;
 
-VictoryGameLayer::VictoryGameLayer(const std::string& level, int coin) : m_currentLevel{level}, m_collectedCoins{coin}
+VictoryGameLayer::VictoryGameLayer(int seasonId, int levelId, int coin)
+    : m_seasonIndex{seasonId}, m_levelIndex{levelId}, m_collectedCoins{coin}
 {
     m_origin      = Director::getInstance()->getVisibleOrigin();
     m_visibleSize = Director::getInstance()->getVisibleSize();
 }
 
-VictoryGameLayer* VictoryGameLayer::create(const std::string& level, int coin)
+VictoryGameLayer* VictoryGameLayer::create(int seasonId, int levelId, int coin)
 {
-    auto pRet = new VictoryGameLayer(level, coin);
+    auto pRet = new VictoryGameLayer(seasonId, levelId, coin);
     if (pRet->init())
     {
         pRet->autorelease();
@@ -44,6 +46,8 @@ bool VictoryGameLayer::init()
     // save coins collected
     UserDefault::getInstance()->setIntegerForKey("Coin", m_collectedCoins);
     UserDefault::getInstance()->flush();
+
+    goToNextLevel();
 
     // play bounce sound
     Audio::getInstance().playSfx(std::string(sound_audio::applause));
@@ -131,11 +135,112 @@ bool VictoryGameLayer::onTouchBegan(ax::Touch* touch, ax::Event* event)
 
 void VictoryGameLayer::displayCurrentLevel()
 {
-    auto level      = StringUtils::format("Level %s", m_currentLevel.c_str());
-    auto levelLabel = Label::createWithBMFont(fonts::hugmat_fnt, m_currentLevel);
+    auto level      = StringUtils::format("Level %s", std::to_string(m_levelIndex).c_str());
+    auto levelLabel = Label::createWithBMFont(fonts::hugmat_fnt, level);
     levelLabel->setBMFontSize(50.0f);
     levelLabel->setColor(Color3B::BLACK);
     levelLabel->setPositionX(bg->getContentSize().width / 2.0f);
     levelLabel->setPositionY(bg->getContentSize().height * 0.8f);
     bg->addChild(levelLabel);
+}
+
+void VictoryGameLayer::goToNextLevel()
+{
+    // ---------------From Asset / new ------------------
+    // load data from json file
+    auto newJsonData = FileUtils::getInstance()->getDataFromFile(game_data::season_level_filepath);
+    std::string newcontentString((const char*)newJsonData.getBytes(), newJsonData.getSize());
+
+    // parse json
+    rapidjson::Document new_document;
+    new_document.Parse<0>(newcontentString.c_str());
+
+    // Check if parsing of the new_document JSON succeeded
+    if (!new_document.IsObject())
+    {
+        AXLOG("Failed to parse new_document JSON data.");
+        return;
+    }
+
+    // -----------------------Existing ----------------
+    // get writable path
+    std::string path = FileUtils::getInstance()->getWritablePath() + "season_level.json";
+
+    // load data from json file
+    // auto contentSrc = FileUtils::getInstance()->getDataFromFile(game_data::season_level_filepath);
+    auto jsonData = FileUtils::getInstance()->getDataFromFile(path);
+    std::string contentString((const char*)jsonData.getBytes(), jsonData.getSize());
+
+    // decrypt/decode the data
+    auto decode               = Strings::from_base64(contentString);
+    auto decodedContentString = zlibString::decompress_string(decode);
+
+    // parse json
+    rapidjson::Document writableDoc;
+    writableDoc.Parse<0>(decodedContentString.c_str());
+
+    // Check if parsing of the writable JSON succeeded
+    if (!writableDoc.IsObject())
+    {
+        AXLOG("Failed to parse writable JSON data.");
+        return;
+    }
+
+    // ------------------ merge data----------------------
+    // Merge the data from updatedDoc into writableDoc
+    // Check if the array key exists in both the updated JSON and writable JSON
+    if (new_document.HasMember("seasons") && writableDoc.HasMember("seasons"))
+    {
+        // Access the arrays
+        rapidjson::Value& updatedArray  = new_document["seasons"];
+        rapidjson::Value& writableArray = writableDoc["seasons"];
+
+        // Find season object in json
+        for (size_t i{0}; i < writableArray.Size(); i++)
+        {
+            auto& season = writableArray[i];
+            if (season.HasMember("id") && season["id"].IsInt() && season["id"].GetInt() == m_seasonIndex)
+            {
+                // Find the level within the season
+                auto& levelsArray = season["levels"];
+                for (size_t j = 0; j < levelsArray.Size(); j++)
+                {
+                    auto& level = levelsArray[j];
+                    if (level.HasMember("id") && level["id"].IsInt() && level["id"].GetInt() == m_levelIndex)
+                    {
+                        if (level.HasMember("id") && level["id"].IsInt())
+                        {
+                            level["completed"] = true;
+
+                            // Check if the next level should be unlocked
+                            int nextLevelIndex = j + 1;
+                            if (nextLevelIndex < levelsArray.Size())
+                            {
+                                auto& nextLevel = levelsArray[nextLevelIndex];
+                                if (nextLevel.HasMember("id") && nextLevel["id"].IsInt() &&
+                                    nextLevel["id"].GetInt() == nextLevelIndex + 1)
+                                {
+                                    nextLevel["unlocked"] = true;
+                                    /*if (nextLevel["unlocked"].GetBool())
+                                    {
+                                    }*/
+
+                                    UserDefault::getInstance()->setIntegerForKey("CurrentSeasonIndex", i);
+                                    UserDefault::getInstance()->flush();
+
+                                    UserDefault::getInstance()->setIntegerForKey("CurrentLevelIndex", nextLevelIndex);
+                                    UserDefault::getInstance()->flush();
+                                }
+                            }
+                        }
+                        break;
+                    }
+                }
+                break;  // no need to continue searching the loop when id has been found hence exit it with a break
+            }
+        }
+    }
+
+    // save
+    GameUtils::saveItemDataToJson(writableDoc, "season_level.json");
 }

@@ -21,7 +21,6 @@
 #include "rapidjson/document.h"
 #include "rapidjson/filewritestream.h"
 #include <rapidjson/writer.h>
-#include "season/Season.h"
 
 USING_NS_AX;
 
@@ -77,8 +76,14 @@ public:
     void handleContactItemBall(Item* item);
     void removeMeteor(float dt);
 
+    void setCurrentIndices(int currentSeasonIndex, int currentLevelIndex, int totalItems);
+
 private:
     GameState _gameState = GameState::init;
+
+    int m_currentSeasonIndex;
+    int m_currentLevelIndex;
+    int m_totalItems;
 
     Size m_visibleSize;
     Vec2 m_origin;
@@ -165,11 +170,4 @@ private:
     bool onShakeBush();
     bool onCollectCoin();
     bool onItemsAllDetached();
-
-    // seasons
-    int m_currentSeasonIndex;
-    int m_totalSeasons{};
-    std::vector<std::unique_ptr<Season>> m_seasons;
-    void loadSeasonFromJsonFile();
-    void createSeason();
 };

@@ -2,6 +2,7 @@
 
 #include "axmol.h"
 #include "ui/CocosGUI.h"
+#include "season/Season.h"
 
 class GameScene;
 
@@ -22,6 +23,14 @@ private:
     ax::EventListenerTouchOneByOne* m_touchListener;
 
     bool onTouchBegan(ax::Touch* touch, ax::Event* event);
+
+    // seasons
+    int m_currentSeasonIndex;
+    int m_currentLevelIndex;
+    int m_totalSeasons{};
+    std::vector<std::unique_ptr<Season>> m_seasons;
+    void loadSeasonFromJsonFile();
+    void createSeason();
 
 public:
     static MainMenuLayer* create();
