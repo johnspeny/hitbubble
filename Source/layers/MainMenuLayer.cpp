@@ -5,6 +5,12 @@
 #include "helpers/string_manipulation/zlibString.h"
 #include "helpers/string_manipulation/base64.h"
 
+#include "rapidjson/document.h"
+#include "rapidjson/filereadstream.h"
+#include "rapidjson/filewritestream.h"
+#include "rapidjson/writer.h"
+#include "rapidjson/prettywriter.h"
+
 USING_NS_AX;
 using namespace ui;
 
@@ -41,12 +47,8 @@ bool MainMenuLayer::init()
     if (!LayerColor::initWithColor(Color4B(255, 0, 0, 0)))
         return false;
 
-    CLOG("MainMenu");
     loadSeasonFromJsonFile();
     createSeason();
-
-    // auto l = m_seasons[m_currentSeasonIndex]->getName();
-    auto& l = m_seasons[m_currentSeasonIndex]->getLevels().at(0);
 
     // Create a button -------------------------------------------------------------------------
     auto playButton = ui::Button::create("transparentDark40.png", "", "");
@@ -121,9 +123,16 @@ void MainMenuLayer::updateSwallowTouches()
 void MainMenuLayer::setGameSceneReference(GameScene* gameScene)
 {
     m_gameScene = gameScene;
-    // get current level
+
+    // get level data eg items
     auto items = m_seasons[m_currentSeasonIndex]->getLevels()[m_currentLevelIndex]->items;
-    m_gameScene->setCurrentIndices(m_currentSeasonIndex + 1, m_currentLevelIndex + 1, items);
+
+    // points
+    auto& points = m_seasons[m_currentSeasonIndex]->getLevels()[m_currentLevelIndex]->points;
+
+    // pass them to game scene
+    m_gameScene->setCurrentIndices(m_currentSeasonIndex + 1, m_currentLevelIndex + 1, items, points);
+
     updateSwallowTouches();
 }
 
@@ -212,6 +221,13 @@ void MainMenuLayer::createSeason()
                 bool isCompleted      = levelObject["completed"].GetBool();
                 int items             = levelObject["items"].GetInt();
                 bool isUnlocked       = levelObject["unlocked"].GetBool();
+                // Get the points array for the current level
+                std::vector<int> points;
+                rapidjson::Value& pointsArray = levelObject["points"];
+                for (rapidjson::SizeType k = 0; k < pointsArray.Size(); k++)
+                {
+                    points.push_back(pointsArray[k].GetInt());
+                }
 
                 // Create a Level object and Add the level to the season
                 auto level           = std::make_unique<Level>();
@@ -221,6 +237,7 @@ void MainMenuLayer::createSeason()
                 level->unlocked      = isUnlocked;
                 level->items         = items;
                 level->pointsAwarded = false;
+                level->points        = points;
 
                 // Create a Level object and Add the level to the season
                 m_seasons.back()->addLevel(std::move(level));

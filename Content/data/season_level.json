@@ -10,6 +10,7 @@
                     "completed": false,
                     "unlocked": true,
                     "items": 1,
+                    "points": [ 2 ],
                     "pointsAwarded": false
                 },
                 {
@@ -18,6 +19,7 @@
                     "completed": false,
                     "unlocked": false,
                     "items": 2,
+                    "points": [ 2, 2 ],
                     "pointsAwarded": false
                 },
                 {
@@ -26,6 +28,7 @@
                     "completed": false,
                     "unlocked": false,
                     "items": 3,
+                    "points": [ 2, 3, 3 ],
                     "pointsAwarded": false
                 },
                 {
@@ -34,6 +37,7 @@
                     "completed": false,
                     "unlocked": false,
                     "items": 4,
+                    "points": [ 2, 2, 3, 3 ],
                     "pointsAwarded": false
                 },
                 {
@@ -42,6 +46,7 @@
                     "completed": false,
                     "unlocked": false,
                     "items": 4,
+                    "points": [ 2, 3, 4, 5 ],
                     "pointsAwarded": false
                 }
             ]

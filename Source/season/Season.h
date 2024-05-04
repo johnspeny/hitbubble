@@ -11,6 +11,7 @@ struct Level
     bool completed;
     bool unlocked;
     int items;
+    std::vector<int> points;
     bool pointsAwarded;
 };
 

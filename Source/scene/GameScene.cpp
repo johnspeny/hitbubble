@@ -6,6 +6,16 @@
 #include "particlez/DustParticle.h"
 #include "Audio.h"
 #include "actor/item/Fruit.h"
+#include "ui/CocosGUI.h"
+
+#include "rapidjson/document.h"
+#include "rapidjson/filereadstream.h"
+#include "rapidjson/filewritestream.h"
+#include "rapidjson/writer.h"
+#include "rapidjson/prettywriter.h"
+
+USING_NS_AX;
+using namespace ui;
 
 GameScene::GameScene()
     : _isUpdatePaused{false}
@@ -113,7 +123,6 @@ void GameScene::update(float dt)
     case GameState::init:
     {
         _gameState = GameState::update;
-        CLOG("init");
         // update the level on game start
         // m_hud->topContainer->updateLevelLabel(std::stoi(m_seasons[m_currentSeasonIndex]->getName()));
         m_hud->topContainer->updateLevelLabel(m_currentLevelIndex);
@@ -469,6 +478,8 @@ void GameScene::resetGame()
     m_boardItems.clear();
     itemScheduledForRemoval.clear();
 
+    this->removeChild(coin, true);
+
     // clear nodes add here
     this->removeAllChildren();
 
@@ -606,7 +617,7 @@ void GameScene::handleContactItemBall(Item* item)
     {
         item->getBodySprite()->setColor(Color3B::GREEN);
     }
-    else if (item && item->getNumContacts() == 2)
+    else if (item && item->getNumContacts() == item->getPoints())
     {
         // Check if m1 is in meteorList
         auto itemIt = std::find_if(m_boardItems.begin(), m_boardItems.end(),
@@ -878,10 +889,14 @@ void GameScene::clamplBoardToEndOfChain()
 void GameScene::createItems()
 {
     int totalItems{m_totalItems};
-    for (int i = 0; i < totalItems; ++i)
+    if (m_points.size() == m_totalItems)
     {
-        auto item = std::make_unique<Fruit>(2);
-        m_boardItems.push_back(std::move(item));
+        for (int i = 0; i < totalItems; ++i)
+        {
+            auto item = std::make_unique<Fruit>(m_points[i]);
+            item->setPoints(m_points[i]);
+            m_boardItems.push_back(std::move(item));
+        }
     }
 }
 
@@ -1038,7 +1053,7 @@ bool GameScene::onItemsAllDetached()
             this->_isWinGame = true;
             CLOG("removed");
         },
-            0.6f, "ready4removal");
+            0.2f, "ready4removal");
     }
 
     return isItemsAllDetached;
@@ -1065,9 +1080,13 @@ void GameScene::removeMeteor(float dt)
     }
 }
 
-void GameScene::setCurrentIndices(int currentSeasonIndex, int currentLevelIndex, int totalItems)
+void GameScene::setCurrentIndices(int currentSeasonIndex,
+                                  int currentLevelIndex,
+                                  int totalItems,
+                                  const std::vector<int>& points)
 {
     m_currentLevelIndex  = currentLevelIndex;
     m_currentSeasonIndex = currentSeasonIndex;
     m_totalItems         = totalItems;
+    m_points             = points;
 }

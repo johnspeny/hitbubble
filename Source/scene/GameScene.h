@@ -1,7 +1,6 @@
 #pragma once
 
 #include "axmol.h"
-#include "ui/CocosGUI.h"
 #include "helpers/box2d/b2DebugRenderer.h"
 #include "box2d/box2d.h"
 #include "WorldContactListener.h"
@@ -18,13 +17,6 @@
 #include "actor/Coin.h"
 #include "actor/item/Item.h"
 #include "actor/item/Fruit.h"
-#include "rapidjson/document.h"
-#include "rapidjson/filewritestream.h"
-#include <rapidjson/writer.h>
-
-USING_NS_AX;
-
-using namespace ui;
 
 class GameScene : public ax::Scene
 {
@@ -61,7 +53,7 @@ public:
     void update(float dt) override;
     inline b2World* getWorld() const { return m_world.get(); }
 
-    //
+    // game options
     void startNewGame();
     void playGame();
     void loadGame();
@@ -76,7 +68,10 @@ public:
     void handleContactItemBall(Item* item);
     void removeMeteor(float dt);
 
-    void setCurrentIndices(int currentSeasonIndex, int currentLevelIndex, int totalItems);
+    void setCurrentIndices(int currentSeasonIndex,
+                           int currentLevelIndex,
+                           int totalItems,
+                           const std::vector<int>& points);
 
 private:
     GameState _gameState = GameState::init;
@@ -84,9 +79,10 @@ private:
     int m_currentSeasonIndex;
     int m_currentLevelIndex;
     int m_totalItems;
+    std::vector<int> m_points;
 
-    Size m_visibleSize;
-    Vec2 m_origin;
+    ax::Size m_visibleSize;
+    ax::Vec2 m_origin;
     float fixedTimeStep{1.0f / 60.0f};
 
     bool setForRemoval{false};

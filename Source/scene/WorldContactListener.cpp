@@ -147,7 +147,7 @@ void WorldContactListener::EndContact(b2Contact* contact)
             {
                 auto item = reinterpret_cast<Fruit*>(itemFixture->GetUserData().pointer);
 
-                if (item->getNumContacts() == 2)
+                if (item->getNumContacts() == item->getPoints())
                 {
                     // disable player from colliding with ball after hitting wall
                     b2Filter filterData;

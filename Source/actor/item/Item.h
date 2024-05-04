@@ -22,10 +22,13 @@ public:
     virtual void endContact();
     virtual int getNumContacts() const;
     virtual int getNumWallContacts() const;
+    inline void setPoints(int points) { m_points = points; }
+    inline int getPoints() const { return m_points; };
 
 protected:
     float m_itemX;
     float m_itemY;
+    int m_points;
     int m_numContacts;
     int m_numWallContacts;
 };
