@@ -6,7 +6,7 @@
 
     <Application.Resources>
 
-      <x:String x:Key="AppName">hitbubble</x:String>
+      <x:String x:Key="AppName">HitBubble</x:String>
 
     </Application.Resources>
 </Application>

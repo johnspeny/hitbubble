@@ -1,5 +1,4 @@
 #include "Character.h"
-
 #include "GameUtils.h"
 #include "Constants.h"
 #include "helpers/Logger.h"
@@ -34,10 +33,6 @@ void Character::createHumanBody(float x, float y)
 void Character::update(float dt) const
 {
     m_head->update(dt);
-
-    // if head is hit by meteor
-    // break the joint connecting the head n game over
-
     m_torso->update(dt);
     m_hair->update(dt);
 }

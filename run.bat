@@ -10,7 +10,7 @@ echo Entering run.bat directory: %myDir%
 
 cd /d %myDir%
 
-set APP_NAME=hitbubble
+set APP_NAME=HitBubble
 set BUILD_DIR=build_x64
 set BUILD_CFG=%1
 

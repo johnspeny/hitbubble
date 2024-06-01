@@ -25,7 +25,7 @@
 
 cmake_minimum_required(VERSION 3.10)
 
-set(APP_NAME hitbubble)
+set(APP_NAME HitBubble)
 
 project(${APP_NAME})
 
@@ -73,7 +73,6 @@ endif()
 # The common cross-platforms source files and header files
 list(APPEND GAME_SOURCE
         Source/AppDelegate.cpp
-        Source/MainScene.cpp
         Source/DynamicEntity.cpp
         Source/StaticEntity.cpp
         Source/Audio.cpp
@@ -132,7 +131,6 @@ list(APPEND GAME_SOURCE
 
 list(APPEND GAME_HEADER
         Source/AppDelegate.h
-        Source/MainScene.h
         Source/MyEnums.h
         Source/Constants.h
         Source/DynamicEntity.h
@@ -195,7 +193,7 @@ list(APPEND GAME_HEADER
 
         # data
         source/season/Season.h
-        )
+)
 
 
 set(GAME_INC_DIRS
@@ -272,7 +270,6 @@ elseif(APPLE)
     elseif(MACOSX)
         set(APP_UI_RES
             proj.ios_mac/mac/Icon.icns
-            proj.ios_mac/mac/Info.plist
             )
         list(APPEND GAME_SOURCE
              proj.ios_mac/mac/main.cpp
@@ -314,7 +311,7 @@ endif()
 if(APPLE)
     set_target_properties(${APP_NAME} PROPERTIES RESOURCE "${APP_UI_RES}")
     set_xcode_property(${APP_NAME} INSTALL_PATH "\$(LOCAL_APPS_DIR)")
-    set_xcode_property(${APP_NAME} PRODUCT_BUNDLE_IDENTIFIER "com.holeygons.hitbubble")
+    set_xcode_property(${APP_NAME} PRODUCT_BUNDLE_IDENTIFIER "org.axmol.hitbubble")
 
     if(MACOSX)
         set_target_properties(${APP_NAME} PROPERTIES MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/proj.ios_mac/mac/Info.plist")

@@ -29,8 +29,6 @@ GameScene::GameScene()
     m_visibleSize = Director::getInstance()->getVisibleSize();
     m_origin      = Director::getInstance()->getVisibleOrigin();
     GameUtils::PPM::initVars();
-    // current season screen
-    // m_currentSeasonIndex = UserDefault::getInstance()->getIntegerForKey("CurrentSeasonIndex", 0);
 }
 
 GameScene::~GameScene()
@@ -123,8 +121,6 @@ void GameScene::update(float dt)
     case GameState::init:
     {
         _gameState = GameState::update;
-        // update the level on game start
-        // m_hud->topContainer->updateLevelLabel(std::stoi(m_seasons[m_currentSeasonIndex]->getName()));
         m_hud->topContainer->updateLevelLabel(m_currentLevelIndex);
         break;
     }
@@ -562,9 +558,6 @@ void GameScene::reviveGame()
         // torso
         m_character->m_torso->destroyBody();
         this->removeChild(m_character->m_torso->getBodySprite());
-
-        // position
-        // m_character->m_torso->setPosition(m_character->originPos);
     }
     m_character.reset();
 
@@ -622,10 +615,6 @@ void GameScene::handleContactItemBall(Item* item)
         // Check if m1 is in meteorList
         auto itemIt = std::find_if(m_boardItems.begin(), m_boardItems.end(),
                                    [&](const std::unique_ptr<Item>& it) { return it.get() == item; });
-
-        //        auto itemIt =
-        //            std::ranges::find_if(m_boardItems, [&](const std::unique_ptr<Item>& it) { return it.get() == item;
-        //            });
 
         // schedule it for removal
         if (itemIt != m_boardItems.end())
@@ -707,16 +696,6 @@ void GameScene::onGameOver()
     timeScale = _isGameOver || _isWinGame ? 0.09f : 1.0f;
 
     // get mission label
-    // CLOG("%s", std::string(m_hud->getMissionLabel()->getString()).c_str());
-    /*GameOverLayer::LevelData newLevelData;
-    newLevelData.currentLevel = "0";
-    newLevelData.collectedCoins = "10";
-    newLevelData.mission = std::string(m_hud->getMissionLabel()->getString());
-    newLevelData.rewards = "500 points";*/
-
-    // create revive layer
-    // m_hud->setVisible(false);
-
     m_gOverLayer = GameOverLayer::create(std::string("a"));
     m_gOverLayer->setGameSceneReference(this);
     addChild(m_gOverLayer, 9999);
@@ -741,9 +720,6 @@ void GameScene::onGameWin()
 
 void GameScene::onReviveGame()
 {
-    // set
-    // timeScale = _isGameOver || _isWinGame ? 0.09f : 1.0f;
-
     // create revive layer
     m_reviveLayer = ReviveGameLayer::create();
     m_reviveLayer->setGameSceneReference(this);
@@ -753,7 +729,6 @@ void GameScene::onReviveGame()
 void GameScene::createRandomCoin()
 {
     // Create a new Coin instance
-    // Coin* coin = Coin::create();
     coin = Coin::create();
 
     // Random number generators
@@ -777,7 +752,7 @@ void GameScene::createRandomCoin()
 void GameScene::collectCoin(ax::Sprite* coin, const ax::Vec2& targetPoint)
 {
     // Move the coin to the target point with a MoveTo action
-    float duration    = 0.25f;  // Adjust the duration as needed
+    float duration    = 0.25f;
     auto moveToAction = ax::MoveTo::create(duration, targetPoint);
 
     // You can also add other actions like fading out the coin
@@ -788,14 +763,12 @@ void GameScene::collectCoin(ax::Sprite* coin, const ax::Vec2& targetPoint)
         coin->removeFromParentAndCleanup(true);
 
         // Update the coin label with the new total
-        // int newTotalCoin = 1/* Calculate the new total coin */;
         m_hud->topContainer->updateCoinLabel(totalCoin);
 
         // Set isCoinRemoved to true
         isCoinRemoved = true;
 
         // Create a new coin after the previous one is removed
-        // createRandomCoin();
     });
 
     // Create a sequence of actions
@@ -924,7 +897,6 @@ void GameScene::placeItemsOnBoard()
         float itemY = circleRadius * sinf(angle) / GameUtils::PPM::kPpm;
 
         m_boardItems[i]->originalPosition(itemX, itemY);
-        // m_boardItems[i]->setPosition(Vec2(itemX, itemY));
 
         // get position of the board so you can place items on it
         auto& boardPos = m_board->getBody()->GetPosition();
@@ -1074,7 +1046,6 @@ void GameScene::removeMeteor(float dt)
             auto& dyingMeteor = *meteorIt;
 
             // destroy its body
-            // dyingMeteor->destroyBody();
             detachItemFromBoard(dyingMeteor.get());
         }
     }

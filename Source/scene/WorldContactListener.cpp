@@ -65,8 +65,6 @@ void WorldContactListener::BeginContact(b2Contact* contact)
             b2Fixture* ballFixture = GetTargetFixture(category_bits::kBall, fixtureA, fixtureB);
             b2Fixture* hairFixture = GetTargetFixture(category_bits::kHair, fixtureA, fixtureB);
 
-            // CLOG("at hit");
-
             if (ballFixture && hairFixture)
             {
                 auto ball = reinterpret_cast<Ball*>(ballFixture->GetUserData().pointer);
@@ -74,7 +72,6 @@ void WorldContactListener::BeginContact(b2Contact* contact)
                 if (!ball->getIsHitHair())
                 {
                     ball->setIsHitHair(true);
-                    // CLOG("hit");
                 }
             }
         }
@@ -88,7 +85,6 @@ void WorldContactListener::BeginContact(b2Contact* contact)
             if (ballFixture && itemFixture)
             {
                 auto item = reinterpret_cast<Fruit*>(itemFixture->GetUserData().pointer);
-                // CLOG("ball hit item");
                 item->startContact();
                 auto snmg = SceneManager::getInstance().getCurrentScene<GameScene>();
                 snmg->handleContactItemBall(item);
@@ -113,9 +109,6 @@ void WorldContactListener::BeginContact(b2Contact* contact)
                         item->setIsHitWall(true);
                         item->startWallContact();
                     }
-
-                    // Recalculate mass properties if needed
-                    // marioBody->ResetMassData();
                 }
             }
         }

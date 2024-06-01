@@ -246,8 +246,6 @@ void MainMenuLayer::createSeason()
     }
     else
     {
-        // ax::log("json has errors");
         return;
     }
-    // m_seasons[m_currentSeasonIndex]->getName()
 }

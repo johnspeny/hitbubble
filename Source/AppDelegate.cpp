@@ -24,7 +24,6 @@
  ****************************************************************************/
 
 #include "AppDelegate.h"
-#include "MainScene.h"
 #include "scene/GameScene.h"
 #include "scene/SplashScene.h"
 #include "scene/SceneManager.h"
@@ -62,9 +61,10 @@ bool AppDelegate::applicationDidFinishLaunching()
     {
 #if (AX_TARGET_PLATFORM == AX_PLATFORM_WIN32) || (AX_TARGET_PLATFORM == AX_PLATFORM_MAC) || \
     (AX_TARGET_PLATFORM == AX_PLATFORM_LINUX)
-        glView = GLViewImpl::createWithRect("hitbubble", ax::Rect(0, 0, 1080.0f / 4, 2220.0f / 4));
+        glView = GLViewImpl::createWithRect("HitBubble",
+                                            ax::Rect(0, 0, designResolutionSize.width, designResolutionSize.height));
 #else
-        glView = GLViewImpl::create("hitbubble");
+        glView = GLViewImpl::create("HitBubble");
 #endif
         director->setGLView(glView);
 #if (AX_TARGET_PLATFORM == AX_PLATFORM_WIN32)
@@ -89,9 +89,6 @@ bool AppDelegate::applicationDidFinishLaunching()
 
     // create a scene. it's an autorelease object
     auto scene = utils::createInstance<SplashScene>();
-
-    // run
-    // director->runWithScene(scene);
     SceneManager::getInstance().runWithScene(scene);
 
     return true;

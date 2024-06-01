@@ -37,7 +37,7 @@ bool Ball::showOnGameScene(const Vec2& position)
     m_isShownOnGameScene = true;
 
     // create the sprite
-    m_bodySprite = Sprite::create("circle.png");
+    m_bodySprite = Sprite::create("head.png");
 
     m_bodySprite->setColor(Color3B::RED);
 

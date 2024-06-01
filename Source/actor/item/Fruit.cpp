@@ -35,14 +35,9 @@ bool Fruit::showOnGameScene(const Vec2& position)
     // set initial sprite position
     m_bodySprite->setPosition(position);
 
-    // set names
-    // m_bodySprite->setName(spriteName);
-
     // scale it down
     float scale = m_radius / (m_bodySprite->getContentSize().width / 2.0f);
     m_bodySprite->setScale(scale);
-
-    // m_bodySprite->setTag();
 
     // create the physics body
     // use its content size to calculate radius
@@ -53,7 +48,7 @@ bool Fruit::showOnGameScene(const Vec2& position)
     snmg->addChild(m_bodySprite, 1);
 
     // add the label to the fruit
-    lifeLabel = Label::createWithBMFont(fonts::hugmat_fnt, std::to_string(m_lifeVal));
+    lifeLabel = Label::createWithBMFont(fonts::supplycenter_fnt, std::to_string(m_lifeVal));
     lifeLabel->setBMFontSize(18.0f);
     lifeLabel->setPosition({m_bodySprite->getContentSize().width * 0.5f, m_bodySprite->getContentSize().height * 0.5f});
     lifeLabel->setColor(Color3B::BLUE);
@@ -93,29 +88,6 @@ void Fruit::update(float dt)
         // Update sprite's size
         float scale = newRadius / (m_bodySprite->getContentSize().width / 2.0f);
         m_bodySprite->setScale(scale);
-
-        //// Destroy the existing fixture
-        // b2Fixture* fixtureToDelete = itemFixture->GetBody()->GetFixtureList();
-        // itemFixture->GetBody()->DestroyFixture(fixtureToDelete);
-
-        //// Update Box2D body's fixture size
-        // b2CircleShape newShape;
-        // newShape.m_radius = item->getRadius() / GameUtils::PPM::kPpm;
-
-        //// Create a new fixture with the updated shape
-        // b2FixtureDef fixtureDef;
-        // fixtureDef.shape               = &newShape;
-        // fixtureDef.density             = 0.1f;
-        // fixtureDef.friction            = 0.0f;
-        // fixtureDef.restitution         = 0.2f;
-        // fixtureDef.filter.categoryBits = kItem;
-        // fixtureDef.filter.maskBits     = kWall | kWallRight | kWallLeft;
-
-        // itemFixture->GetBody()->CreateFixture(&fixtureDef);
-
-        //// Update sprite's size
-        // float scale = item->getRadius() / (item->getBodySprite()->getContentSize().width / 2.0f);
-        // item->getBodySprite()->setScale(scale);
     }
 }
 

@@ -27,7 +27,7 @@ public:
     // character update parts
     void update(float dt) const;
 
-    ax::Vec2 originPos;
+    ax::Vec2 originPos;  // useful when resetting the position of character
 
 private:
     GameScene* _gameScene;

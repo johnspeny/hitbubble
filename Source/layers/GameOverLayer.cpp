@@ -115,7 +115,7 @@ bool GameOverLayer::onTouchBegan(ax::Touch* touch, ax::Event* event)
 void GameOverLayer::displayCurrentLevel()
 {
     auto stars      = "Level 1";
-    auto levelLabel = Label::createWithBMFont(fonts::hugmat_fnt, stars);
+    auto levelLabel = Label::createWithBMFont(fonts::supplycenter_fnt, stars);
     levelLabel->setBMFontSize(50.0f);
     levelLabel->setColor(Color3B::BLACK);
     levelLabel->setPositionX(bg->getContentSize().width / 2.0f);

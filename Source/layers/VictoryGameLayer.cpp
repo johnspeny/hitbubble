@@ -87,12 +87,8 @@ bool VictoryGameLayer::init()
                 // start playing the game
                 if (m_gameScene)
                 {
-                    // Audio::getInstance().stopBgm();
-
                     // reset game
                     m_gameScene->resetGame();
-
-                    // go to next level
                 }
             }
         });
@@ -136,7 +132,7 @@ bool VictoryGameLayer::onTouchBegan(ax::Touch* touch, ax::Event* event)
 void VictoryGameLayer::displayCurrentLevel()
 {
     auto level      = StringUtils::format("Level %s", std::to_string(m_levelIndex).c_str());
-    auto levelLabel = Label::createWithBMFont(fonts::hugmat_fnt, level);
+    auto levelLabel = Label::createWithBMFont(fonts::supplycenter_fnt, level);
     levelLabel->setBMFontSize(50.0f);
     levelLabel->setColor(Color3B::BLACK);
     levelLabel->setPositionX(bg->getContentSize().width / 2.0f);
@@ -167,7 +163,6 @@ void VictoryGameLayer::goToNextLevel()
     std::string path = FileUtils::getInstance()->getWritablePath() + "season_level.json";
 
     // load data from json file
-    // auto contentSrc = FileUtils::getInstance()->getDataFromFile(game_data::season_level_filepath);
     auto jsonData = FileUtils::getInstance()->getDataFromFile(path);
     std::string contentString((const char*)jsonData.getBytes(), jsonData.getSize());
 
@@ -221,9 +216,6 @@ void VictoryGameLayer::goToNextLevel()
                                     nextLevel["id"].GetInt() == nextLevelIndex + 1)
                                 {
                                     nextLevel["unlocked"] = true;
-                                    /*if (nextLevel["unlocked"].GetBool())
-                                    {
-                                    }*/
 
                                     UserDefault::getInstance()->setIntegerForKey("CurrentSeasonIndex", i);
                                     UserDefault::getInstance()->flush();

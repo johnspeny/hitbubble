@@ -55,7 +55,7 @@ void TopContainer::addHomeButton()
     homeButton->setScale(0.5f);
     homeButton->setPositionX(homeButton->getContentSize().width * homeButton->getScale());
     homeButton->setPositionY(this->getContentSize().height * 0.5f);
-    homeButton->addTouchEventListener([this](Ref* sender, Widget::TouchEventType type) {
+    homeButton->addTouchEventListener([this](Object* sender, Widget::TouchEventType type) {
         auto button = dynamic_cast<Button*>(sender);
         if (!button)
             return;
@@ -85,7 +85,7 @@ void TopContainer::addCoinButton()
     ;
 
     auto totalCoin = std::to_string(m_totalCoin);
-    coinLabel      = Label::createWithBMFont(fonts::eng_cin_fnt, totalCoin);
+    coinLabel      = Label::createWithBMFont(fonts::supplycenter_fnt, totalCoin);
     coinLabel->setBMFontSize(24.0f);
     coinLabel->setAnchorPoint(Vec2::ANCHOR_MIDDLE_RIGHT);
     coinLabel->setPositionX(this->getContentSize().width - coinBtn->getContentSize().width * coinBtn->getScale() -
@@ -97,7 +97,7 @@ void TopContainer::addCoinButton()
 void TopContainer::addLevelDisplay()
 {
     auto level = StringUtils::format("Level %d", m_gameLevel);
-    levelLabel = Label::createWithBMFont(fonts::eng_cin_fnt, level);
+    levelLabel = Label::createWithBMFont(fonts::supplycenter_fnt, level);
     levelLabel->setBMFontSize(20.0f);
     levelLabel->setColor(Color3B::BLACK);
     levelLabel->setPositionX(this->getContentSize().width / 2.0f);

@@ -1,6 +1,6 @@
 #include "Coin.h"
 
-Coin::Coin() {}
+Coin::Coin() : m_value{5} {}
 
 Coin* Coin::create()
 {

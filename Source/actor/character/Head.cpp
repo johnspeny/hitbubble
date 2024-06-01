@@ -37,7 +37,6 @@ bool Head::showOnGameScene(const Vec2& position)
 
     // scale it down
     m_bodySprite->setScale(m_scale);
-    // blinkToRed();
 
     defineBody(position.x, position.y);
 
@@ -60,42 +59,6 @@ void Head::update(float dt)
     }
 
     DynamicEntity::update(dt);
-}
-
-void Head::blinkToRed()
-{
-    /**************************************************************************/
-
-    // Save the original color of the sprite
-    Color3B originalColor = m_bodySprite->getColor();
-
-    // Create an action to change the color to red
-    ActionInterval* turnRed = TintTo::create(0.2f, 255, 0, 0);
-
-    // Create an action to revert the color to the original color
-    ActionInterval* turnBack = TintTo::create(0.2f, originalColor.r, originalColor.g, originalColor.b);
-
-    // Create a sequence of actions to blink
-    Sequence* blinkSequence = Sequence::create(turnRed, turnBack, nullptr);
-
-    // Repeat the blink sequence forever
-    // RepeatForever* blinkForever = RepeatForever::create(blinkSequence);
-
-    // m_bodySprite->runAction(blinkForever);
-
-    // Repeat the blink sequence for 3 seconds
-    Repeat* blinkRepeat = Repeat::create(blinkSequence, 3);
-
-    // Run the blink action
-    m_bodySprite->runAction(blinkRepeat);
-
-    // Delay for 3 seconds before stopping the blinking
-    DelayTime* delay = DelayTime::create(3.0f);
-
-    // Create a FiniteTimeAction to stop the blinking
-    FiniteTimeAction* stopBlinking = CallFunc::create([this]() { m_bodySprite->stopAllActions(); });
-
-    /**************************************************************************/
 }
 
 void Head::defineBody(float x, float y)
