@@ -27,6 +27,8 @@ cmake_minimum_required(VERSION 3.10)
 
 set(APP_NAME HitBubble)
 
+set(AX_EXT_HINT OFF)
+
 project(${APP_NAME})
 
 if(XCODE)
