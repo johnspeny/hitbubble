@@ -1,16 +1,28 @@
-# Hit Bubble
 ![image](https://github.com/johnspeny/hitbubble/blob/main/Content/Screenshot.png)
-A casual game to prune numbered bubbles using a bouncing ball
 
-## Build the project
-- ** If you don't have axmol engine installed on your machine you can get it [here](https://github.com/axmolengine/axmol)
-- ** Intended for mobile only luckily pc works alright with mouse :)
+# Hit Bubble
+A casual game to prune numbered bubbles using a bouncing ball
+Note: The project is intended for mobile only but luckily pc works :)
+
+## Tools and Features
+* [axmol](https://github.com/johnspeny/hitbubble.git)
+* C++ 20
+* box2d as physics engine
+* rapidjson to parse levels that are stored in json file
+
+
+## Build and Run project
+1. If you don't have axmol engine installed on your machine first get it from [here](https://github.com/axmolengine/axmol/blob/dev/docs/DevSetup.md)
+2. Clone this [repository](https://github.com/johnspeny/hitbubble.git)
+3. Inside the hitbubble directory run the following command in the cmd: `axmol build -p win32`
 
 # TODO
-- Better description later
+- A wiki of how the project works
+- Google Ads intergration
+- More levels
  
 # LICENSE AND COPYRIGHT
 - MIT License
-- Assets used are all free to use and some made by me
+- Assets(music, images, fonts) used are all free to use and some made by me
  
 
