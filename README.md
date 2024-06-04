@@ -1,4 +1,5 @@
 ![image](https://github.com/johnspeny/hitbubble/blob/main/Content/Screenshot.png)
+![](https://github.com/johnspeny/hitbubble/blob/main/Media_240604_234957.gif)
 
 # Hit Bubble
 A casual game to prune numbered bubbles using a bouncing ball.
